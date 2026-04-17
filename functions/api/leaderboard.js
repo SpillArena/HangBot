@@ -35,10 +35,33 @@ const json = (payload, status = 200) => new Response(JSON.stringify(payload), {
   },
 })
 
-const getDb = (context) => context.env?.DB
+const D1_BINDING_CANDIDATES = ['DB', 'LEADERBOARD_DB']
+
+const getDb = (context) => {
+  for (const bindingName of D1_BINDING_CANDIDATES) {
+    const db = context.env?.[bindingName]
+    if (db) {
+      return db
+    }
+  }
+
+  return null
+}
+
+const missingBindingPayload = () => ({
+  ok: false,
+  fallback: 'local',
+  message: `D1 binding is missing. Expected one of: ${D1_BINDING_CANDIDATES.join(', ')}`,
+})
 
 const ensureTable = async (db) => {
-  await db.exec(createTableSql)
+  const tableExists = await db
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'leaderboard'")
+    .first()
+
+  if (!tableExists) {
+    await db.exec(createTableSql)
+  }
 }
 
 const listEntries = async (db) => {
@@ -56,7 +79,7 @@ const listEntries = async (db) => {
 export const onRequestGet = async (context) => {
   const db = getDb(context)
   if (!db) {
-    return json({ ok: false, fallback: 'local', message: 'D1 binding DB is missing.' }, 503)
+    return json(missingBindingPayload())
   }
 
   try {
@@ -64,14 +87,14 @@ export const onRequestGet = async (context) => {
     const entries = await listEntries(db)
     return json({ ok: true, provider: 'd1', entries })
   } catch (error) {
-    return json({ ok: false, fallback: 'local', message: `Failed to load leaderboard: ${error?.message ?? 'unknown error'}` }, 500)
+    return json({ ok: false, fallback: 'local', message: `Failed to load leaderboard: ${error?.message ?? 'unknown error'}` })
   }
 }
 
 export const onRequestPost = async (context) => {
   const db = getDb(context)
   if (!db) {
-    return json({ ok: false, fallback: 'local', message: 'D1 binding DB is missing.' }, 503)
+    return json(missingBindingPayload())
   }
 
   try {
@@ -103,14 +126,14 @@ export const onRequestPost = async (context) => {
     const entries = await listEntries(db)
     return json({ ok: true, provider: 'd1', entries })
   } catch (error) {
-    return json({ ok: false, fallback: 'local', message: `Failed to save leaderboard entry: ${error?.message ?? 'unknown error'}` }, 500)
+    return json({ ok: false, fallback: 'local', message: `Failed to save leaderboard entry: ${error?.message ?? 'unknown error'}` })
   }
 }
 
 export const onRequestDelete = async (context) => {
   const db = getDb(context)
   if (!db) {
-    return json({ ok: false, fallback: 'local', message: 'D1 binding DB is missing.' }, 503)
+    return json(missingBindingPayload())
   }
 
   try {
@@ -126,6 +149,6 @@ export const onRequestDelete = async (context) => {
     const entries = await listEntries(db)
     return json({ ok: true, provider: 'd1', entries })
   } catch (error) {
-    return json({ ok: false, fallback: 'local', message: `Failed to delete leaderboard entry: ${error?.message ?? 'unknown error'}` }, 500)
+    return json({ ok: false, fallback: 'local', message: `Failed to delete leaderboard entry: ${error?.message ?? 'unknown error'}` })
   }
 }
