@@ -38,7 +38,7 @@ const json = (payload, status = 200) => new Response(JSON.stringify(payload), {
 const getDb = (context) => context.env?.DB
 
 const ensureTable = async (db) => {
-  await db.exec(createTableSql)
+  await db.prepare(createTableSql).run()
 }
 
 const listEntries = async (db) => {
@@ -56,7 +56,7 @@ const listEntries = async (db) => {
 export const onRequestGet = async (context) => {
   const db = getDb(context)
   if (!db) {
-    return json({ ok: false, fallback: 'local', message: 'D1 binding DB is missing.' }, 503)
+    return json({ ok: false, fallback: 'local', message: 'D1 binding DB is missing.' })
   }
 
   try {
@@ -64,14 +64,14 @@ export const onRequestGet = async (context) => {
     const entries = await listEntries(db)
     return json({ ok: true, provider: 'd1', entries })
   } catch (error) {
-    return json({ ok: false, fallback: 'local', message: `Failed to load leaderboard: ${error?.message ?? 'unknown error'}` }, 500)
+    return json({ ok: false, fallback: 'local', message: `Failed to load leaderboard: ${error?.message ?? 'unknown error'}` })
   }
 }
 
 export const onRequestPost = async (context) => {
   const db = getDb(context)
   if (!db) {
-    return json({ ok: false, fallback: 'local', message: 'D1 binding DB is missing.' }, 503)
+    return json({ ok: false, fallback: 'local', message: 'D1 binding DB is missing.' })
   }
 
   try {
@@ -103,14 +103,14 @@ export const onRequestPost = async (context) => {
     const entries = await listEntries(db)
     return json({ ok: true, provider: 'd1', entries })
   } catch (error) {
-    return json({ ok: false, fallback: 'local', message: `Failed to save leaderboard entry: ${error?.message ?? 'unknown error'}` }, 500)
+    return json({ ok: false, fallback: 'local', message: `Failed to save leaderboard entry: ${error?.message ?? 'unknown error'}` })
   }
 }
 
 export const onRequestDelete = async (context) => {
   const db = getDb(context)
   if (!db) {
-    return json({ ok: false, fallback: 'local', message: 'D1 binding DB is missing.' }, 503)
+    return json({ ok: false, fallback: 'local', message: 'D1 binding DB is missing.' })
   }
 
   try {
@@ -126,6 +126,6 @@ export const onRequestDelete = async (context) => {
     const entries = await listEntries(db)
     return json({ ok: true, provider: 'd1', entries })
   } catch (error) {
-    return json({ ok: false, fallback: 'local', message: `Failed to delete leaderboard entry: ${error?.message ?? 'unknown error'}` }, 500)
+    return json({ ok: false, fallback: 'local', message: `Failed to delete leaderboard entry: ${error?.message ?? 'unknown error'}` })
   }
 }
