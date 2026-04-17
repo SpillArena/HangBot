@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { DIFFICULTY_CONFIG } from '../constants/gameConfig'
 import Leaderboard from './Leaderboard'
 
@@ -9,7 +10,12 @@ export default function StartScreen({
   lastResult,
   onDeleteLeaderboardEntry,
   onStart,
+  onToggleTheme,
+  theme,
 }) {
+  const { i18n, t } = useTranslation()
+  const language = i18n.language.startsWith('no') ? 'no' : 'en'
+  const isLightTheme = theme === 'light'
   const [username, setUsername] = useState(defaultUsername)
   const [difficulty, setDifficulty] = useState('medium')
   const [error, setError] = useState('')
@@ -20,7 +26,7 @@ export default function StartScreen({
     const trimmed = username.trim()
 
     if (trimmed.length < 2) {
-      setError('Username must be at least 2 characters long.')
+      setError(t('start.usernameError'))
       return
     }
 
@@ -28,21 +34,49 @@ export default function StartScreen({
     onStart(trimmed, difficulty)
   }
 
+  const handleToggleLanguage = () => {
+    i18n.changeLanguage(language === 'en' ? 'no' : 'en')
+  }
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-8 md:px-8">
       <header className="rounded-2xl border border-cyan-400/20 bg-slate-900/70 p-6 shadow-xl shadow-black/20">
-        <h1 className="mb-2 text-3xl font-bold uppercase tracking-[0.2em] text-cyan-300 md:text-4xl">HangBot</h1>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <h1 className="mb-2 text-3xl font-bold uppercase tracking-[0.2em] text-cyan-300 md:text-4xl">HangBot</h1>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onToggleTheme}
+              className="inline-flex items-center gap-1 rounded-full border border-slate-600 bg-slate-800/80 px-3 py-1 text-xs font-semibold text-slate-100 transition hover:border-cyan-400 hover:text-cyan-100"
+              aria-label={t('start.themeLabel')}
+              title={`${t('start.themeLabel')}: ${isLightTheme ? t('start.light') : t('start.dark')}`}
+            >
+              <span aria-hidden="true">{isLightTheme ? '☀' : '🌙'}</span>
+              <span>{isLightTheme ? t('start.light') : t('start.dark')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleToggleLanguage}
+              className="inline-flex items-center gap-1 rounded-full border border-slate-600 bg-slate-800/80 px-3 py-1 text-xs font-semibold text-slate-100 transition hover:border-cyan-400 hover:text-cyan-100"
+              aria-label={t('start.languageLabel')}
+              title={`${t('start.languageLabel')}: ${language === 'en' ? t('start.english') : t('start.norwegian')}`}
+            >
+              <span aria-hidden="true">🌐</span>
+              <span>{language === 'en' ? 'EN' : 'NO'}</span>
+            </button>
+          </div>
+        </div>
         <p className="mt-3 max-w-3xl text-sm text-slate-300 md:text-base">
-          Enter your username, pick difficulty, and challenge the bot’s mystery words. Results are persisted in the local leaderboard.
+          {t('start.appDescription')}
         </p>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
         <section className="rounded-2xl border border-slate-800/80 bg-slate-950/70 p-5 shadow-xl shadow-black/20">
-          <h2 className="text-lg font-semibold text-slate-100">Start a round</h2>
+          <h2 className="text-lg font-semibold text-slate-100">{t('start.startRound')}</h2>
           <form className="mt-4 space-y-4" onSubmit={handleStart}>
             <div className="space-y-2">
-              <label htmlFor="username" className="text-sm text-slate-300">Username</label>
+              <label htmlFor="username" className="text-sm text-slate-300">{t('start.username')}</label>
               <input
                 id="username"
                 type="text"
@@ -55,7 +89,7 @@ export default function StartScreen({
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="difficulty" className="text-sm text-slate-300">Difficulty</label>
+              <label htmlFor="difficulty" className="text-sm text-slate-300">{t('start.difficulty')}</label>
               <select
                 id="difficulty"
                 value={difficulty}
@@ -64,7 +98,7 @@ export default function StartScreen({
               >
                 {Object.entries(DIFFICULTY_CONFIG).map(([key, config]) => (
                   <option key={key} value={key}>
-                    {config.label} — {config.description}
+                    {t(`difficulty.${key}.label`, { defaultValue: config.label })} — {t(`difficulty.${key}.description`, { defaultValue: config.description })}
                   </option>
                 ))}
               </select>
@@ -76,28 +110,28 @@ export default function StartScreen({
               type="submit"
               className="w-full rounded-xl bg-cyan-400 px-4 py-3 text-sm font-bold uppercase tracking-wide text-slate-950 transition hover:bg-cyan-300"
             >
-              Launch HangBot Round
+              {t('start.launch')}
             </button>
           </form>
 
           <div className="mt-5 space-y-3 text-sm text-slate-300">
-            <p>Bot behavior:</p>
+            <p>{t('start.botBehavior')}</p>
             <ul className="space-y-2 text-xs text-slate-400">
-              <li>• HangBot picks a hidden word and reveals a hint + category.</li>
-              <li>• Every round uses real dictionary words only.</li>
-              <li>• Score rewards wins, few mistakes, and higher difficulty.</li>
+              <li>{t('start.bulletOne')}</li>
+              <li>{t('start.bulletTwo')}</li>
+              <li>{t('start.bulletThree')}</li>
             </ul>
           </div>
 
           {bestEntry && (
             <div className="mt-5 rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-3 text-sm text-emerald-200">
-              Top score: <span className="font-semibold">{bestEntry.score}</span> by <span className="font-semibold">{bestEntry.username}</span>
+              {t('start.topScore')} <span className="font-semibold">{bestEntry.score}</span> {t('start.by')} <span className="font-semibold">{bestEntry.username}</span>
             </div>
           )}
 
           {lastResult && (
             <div className="mt-3 rounded-xl border border-slate-700 bg-slate-900/60 p-3 text-xs text-slate-300">
-              Last round: {lastResult.outcome === 'won' ? 'Win' : 'Loss'} • {lastResult.score} pts • {lastResult.wordLength} letters
+              {t('start.lastRound')} {lastResult.outcome === 'won' ? t('start.win') : t('start.loss')} • {lastResult.score} pts • {lastResult.wordLength} {t('start.letters')}
             </div>
           )}
         </section>

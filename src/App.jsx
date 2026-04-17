@@ -16,6 +16,11 @@ export default function App() {
   const [leaderboard, setLeaderboard] = useState(() => loadLeaderboard())
   const [lastResult, setLastResult] = useState(null)
   const [isDeveloperMode, setIsDeveloperMode] = useState(false)
+  const [theme, setTheme] = useState('dark')
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+  }, [theme])
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -45,6 +50,10 @@ export default function App() {
     setLeaderboard((previousEntries) => removeLeaderboardEntry(previousEntries, entryId))
   }, [])
 
+  const handleToggleTheme = useCallback(() => {
+    setTheme((previousTheme) => (previousTheme === 'dark' ? 'light' : 'dark'))
+  }, [])
+
   return (
     <div className="min-h-screen text-slate-100">
       {screen === 'start' ? (
@@ -55,6 +64,8 @@ export default function App() {
           lastResult={lastResult}
           onDeleteLeaderboardEntry={handleDeleteLeaderboardEntry}
           onStart={handleStart}
+          onToggleTheme={handleToggleTheme}
+          theme={theme}
         />
       ) : (
         <HangmanGame

@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ALPHABET, DIFFICULTY_CONFIG } from '../constants/gameConfig'
+import { useTranslation } from 'react-i18next'
+import { DIFFICULTY_CONFIG } from '../constants/gameConfig'
 import { generateBotWord } from '../utils/botWordFactory'
+
+const BASE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+const NORWEGIAN_ALPHABET_EXT = ['Æ', 'Ø', 'Å']
 
 const HANGMAN_STAGES = [
   ` +---+
@@ -81,8 +85,8 @@ const calculateRoundScore = ({
   return Math.max(0, Math.round(fallbackScore * config.multiplier))
 }
 
-const createRound = async (difficulty) => {
-  const generated = await generateBotWord(difficulty)
+const createRound = async (difficulty, language) => {
+  const generated = await generateBotWord(difficulty, language)
 
   return {
     roundId: createRoundId(),
@@ -91,6 +95,7 @@ const createRound = async (difficulty) => {
     hint: generated.hint,
     category: generated.category,
     introMessage: generated.introMessage,
+    sourceText: generated.sourceText,
     guessedLetters: [],
     wrongGuesses: 0,
     status: 'playing',
@@ -110,6 +115,12 @@ export default function HangmanGame({
   onRoundFinished,
   username,
 }) {
+  const { i18n, t } = useTranslation()
+  const language = i18n.language.startsWith('no') ? 'no' : 'en'
+  const gameAlphabet = useMemo(
+    () => (language === 'no' ? [...BASE_ALPHABET, ...NORWEGIAN_ALPHABET_EXT] : BASE_ALPHABET),
+    [language],
+  )
   const [round, setRound] = useState(null)
   const [isLoadingRound, setIsLoadingRound] = useState(true)
   const [roundSeconds, setRoundSeconds] = useState(0)
@@ -118,16 +129,16 @@ export default function HangmanGame({
   const loadRound = useCallback(async (nextDifficulty) => {
     setIsLoadingRound(true)
     setRoundSeconds(0)
-    const nextRound = await createRound(nextDifficulty)
+    const nextRound = await createRound(nextDifficulty, language)
     setRound(nextRound)
     setIsLoadingRound(false)
-  }, [])
+  }, [language])
 
   useEffect(() => {
     let cancelled = false
 
     const initializeRound = async () => {
-      const nextRound = await createRound(difficulty)
+      const nextRound = await createRound(difficulty, language)
       if (cancelled) {
         return
       }
@@ -141,7 +152,7 @@ export default function HangmanGame({
     return () => {
       cancelled = true
     }
-  }, [difficulty])
+  }, [difficulty, language])
 
   const roundId = round?.roundId ?? null
   const roundStatus = round?.status ?? 'playing'
@@ -162,6 +173,7 @@ export default function HangmanGame({
 
   const activeDifficulty = round?.difficulty ?? difficulty
   const config = DIFFICULTY_CONFIG[activeDifficulty] ?? DIFFICULTY_CONFIG.medium
+  const localizedDifficultyLabel = t(`difficulty.${activeDifficulty}.label`, { defaultValue: config.label })
   const uniqueLetters = useMemo(() => (round ? [...new Set(round.word.split(''))] : []), [round])
   const guessedSet = useMemo(() => new Set(round?.guessedLetters ?? []), [round?.guessedLetters])
   const wrongLetters = useMemo(
@@ -186,7 +198,7 @@ export default function HangmanGame({
     }
 
     const letter = rawLetter.toUpperCase()
-    if (!/^[A-Z]$/.test(letter)) {
+    if (!gameAlphabet.includes(letter)) {
       return
     }
 
@@ -220,7 +232,7 @@ export default function HangmanGame({
           }),
       }
     })
-  }, [isLoadingRound, round])
+  }, [gameAlphabet, isLoadingRound, round])
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -232,9 +244,10 @@ export default function HangmanGame({
         return
       }
 
-      if (/^[a-z]$/i.test(event.key)) {
+      const normalizedKey = typeof event.key === 'string' ? event.key.toUpperCase() : ''
+      if (gameAlphabet.includes(normalizedKey)) {
         event.preventDefault()
-        handleGuess(event.key)
+        handleGuess(normalizedKey)
         return
       }
 
@@ -246,7 +259,7 @@ export default function HangmanGame({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleGuess, isLoadingRound, round, startNextRound])
+  }, [gameAlphabet, handleGuess, isLoadingRound, round, startNextRound])
 
   useEffect(() => {
     if (!round) {
@@ -288,7 +301,7 @@ export default function HangmanGame({
         <section className="rounded-2xl border border-slate-800/80 bg-slate-950/70 p-6 text-center shadow-xl shadow-black/20">
           <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">HangBot</p>
           <p className="mt-3 text-sm text-slate-200">
-            {isLoadingRound ? 'Generating a new mystery word...' : 'Unable to initialize a round.'}
+            {isLoadingRound ? t('game.generatingRound') : t('game.unableInitRound')}
           </p>
           <div className="mt-5 flex justify-center gap-2">
             <button
@@ -296,14 +309,14 @@ export default function HangmanGame({
               onClick={startNextRound}
               className="rounded-lg bg-cyan-400 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-950 transition hover:bg-cyan-300"
             >
-              Try again
+              {t('game.tryAgain')}
             </button>
             <button
               type="button"
               onClick={onBackToLobby}
               className="rounded-lg border border-rose-500/60 bg-rose-500/10 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-rose-200 transition hover:border-rose-400 hover:bg-rose-500/20 hover:text-rose-100"
             >
-              Back to Lobby
+              {t('game.backToLobby')}
             </button>
           </div>
         </section>
@@ -315,22 +328,22 @@ export default function HangmanGame({
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-8 md:px-8">
       <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800/80 bg-slate-950/70 p-4 shadow-xl shadow-black/20">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">Player</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">{t('game.player')}</p>
           <h1 className="text-xl font-semibold text-white">{username}</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide">
           <span className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-slate-300">
-            Difficulty: {config.label}
+            {t('game.difficulty')}: {localizedDifficultyLabel}
           </span>
           <span className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-slate-300">
-            Timer: {formatElapsedTime(roundSeconds)}
+            {t('game.timer')}: {formatElapsedTime(roundSeconds)}
           </span>
           <span className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-slate-300">
-            Attempts left: {attemptsLeft}
+            {t('game.attemptsLeft')}: {attemptsLeft}
           </span>
           {isLoadingRound && (
             <span className="rounded-full border border-cyan-500/60 bg-cyan-500/10 px-3 py-1 text-cyan-200">
-              Loading word...
+              {t('game.loadingWord')}
             </span>
           )}
           <button
@@ -338,30 +351,29 @@ export default function HangmanGame({
             className="rounded-full border border-rose-500/60 bg-rose-500/10 px-3 py-1 text-rose-200 transition hover:border-rose-400 hover:bg-rose-500/20 hover:text-rose-100"
             onClick={onBackToLobby}
           >
-            Back to Lobby
+            {t('game.backToLobby')}
           </button>
         </div>
       </header>
 
       <section className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
         <aside className="rounded-2xl border border-slate-800/80 bg-slate-950/70 p-4">
-          <p className="mb-1 text-xs uppercase tracking-[0.2em] text-slate-400">Bot transmission</p>
-          <p className="text-sm text-slate-200">{round.introMessage}</p>
-
-          <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900/80 p-3">
-            <p className="text-xs uppercase tracking-wide text-slate-400">Category</p>
-            <p className="mt-1 text-sm font-semibold text-cyan-200">{round.category}</p>
-          </div>
+          <p className="mb-1 text-xs uppercase tracking-[0.2em] text-slate-400">{t('game.botTransmission')}</p>
+          <ul className="space-y-1 text-sm text-slate-200">
+            <li>{round.introMessage}</li>
+            <li>{t('game.category')}: {round.category}</li>
+            <li>{t('game.source')}: {round.sourceText}</li>
+          </ul>
 
           <div className="mt-3 rounded-xl border border-slate-800 bg-slate-900/80 p-3">
-            <p className="text-xs uppercase tracking-wide text-slate-400">Hint</p>
+            <p className="text-xs uppercase tracking-wide text-slate-400">{t('game.hint')}</p>
             <p className="mt-1 text-sm text-slate-200">{round.hint}</p>
           </div>
 
           <div className="mt-3 rounded-xl border border-slate-800 bg-slate-900/80 p-3">
-            <p className="text-xs uppercase tracking-wide text-slate-400">Wrong letters</p>
+            <p className="text-xs uppercase tracking-wide text-slate-400">{t('game.wrongLetters')}</p>
             <p className="mt-1 min-h-6 font-mono text-sm text-rose-200">
-              {wrongLetters.length > 0 ? wrongLetters.join(', ') : 'None'}
+              {wrongLetters.length > 0 ? wrongLetters.join(', ') : t('game.none')}
             </p>
           </div>
 
@@ -372,14 +384,14 @@ export default function HangmanGame({
 
         <div className="rounded-2xl border border-slate-800/80 bg-slate-950/70 p-5">
           <div className="rounded-xl border border-slate-800 bg-slate-900/80 px-4 py-5">
-            <p className="mb-2 text-xs uppercase tracking-[0.2em] text-slate-400">Mystery word</p>
+            <p className="mb-2 text-xs uppercase tracking-[0.2em] text-slate-400">{t('game.mysteryWord')}</p>
             <p className="break-words font-mono text-2xl font-semibold tracking-[0.35em] text-white sm:text-3xl">
               {maskedWord}
             </p>
           </div>
 
           <div className="mt-4 grid grid-cols-7 gap-2 sm:grid-cols-9 md:grid-cols-13">
-            {ALPHABET.map((letter) => {
+            {gameAlphabet.map((letter) => {
               const hasGuessed = guessedSet.has(letter)
               const isHit = hasGuessed && round.word.includes(letter)
               const isMiss = hasGuessed && !round.word.includes(letter)
@@ -405,19 +417,19 @@ export default function HangmanGame({
           </div>
 
           <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-3 text-xs text-slate-400">
-            Keyboard tip: press A–Z to guess quickly, and press Enter after round end to start a new one.
+            {t('game.keyboardTip', { alphabetLabel: language === 'no' ? 'A-Å' : 'A-Z' })}
           </div>
 
           {round.status !== 'playing' && (
             <div className={`mt-5 rounded-xl border p-4 ${round.status === 'won' ? 'border-emerald-400/40 bg-emerald-500/10' : 'border-rose-400/40 bg-rose-500/10'}`}>
               <h2 className="text-lg font-bold text-white">
-                {round.status === 'won' ? 'Round won' : 'Round lost'}
+                {round.status === 'won' ? t('game.roundWon') : t('game.roundLost')}
               </h2>
               <p className="mt-1 text-sm text-slate-200">
-                Correct word: <span className="font-mono font-semibold">{round.word}</span>
+                {t('game.correctWord')}: <span className="font-mono font-semibold">{round.word}</span>
               </p>
               <p className="mt-1 text-sm text-slate-200">
-                Score: <span className="font-semibold text-cyan-200">{round.finalScore ?? 0}</span>
+                {t('game.score')}: <span className="font-semibold text-cyan-200">{round.finalScore ?? 0}</span>
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <button
@@ -425,14 +437,14 @@ export default function HangmanGame({
                   onClick={startNextRound}
                   className="rounded-lg bg-cyan-400 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-950 transition hover:bg-cyan-300"
                 >
-                  New word
+                  {t('game.newWord')}
                 </button>
                 <button
                   type="button"
                   onClick={onBackToLobby}
                   className="rounded-lg border border-slate-600 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-200 transition hover:border-cyan-400 hover:text-cyan-200"
                 >
-                  Return lobby
+                  {t('game.returnLobby')}
                 </button>
               </div>
             </div>
@@ -440,7 +452,7 @@ export default function HangmanGame({
 
           {round.status === 'playing' && uniqueLetters.length <= 5 && (
             <div className="mt-5 rounded-xl border border-amber-400/35 bg-amber-500/10 p-3 text-xs text-amber-200">
-              Low unique-letter word detected. Consonant sweeps are effective here.
+              {t('game.lowUniqueLetterWord')}
             </div>
           )}
         </div>
