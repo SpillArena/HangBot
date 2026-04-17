@@ -2,6 +2,7 @@ import { MAX_LEADERBOARD_ENTRIES } from '../constants/gameConfig'
 
 const LEADERBOARD_STORAGE_KEY = 'hangbot.leaderboard.v1'
 const USERNAME_STORAGE_KEY = 'hangbot.username.v1'
+const LEADERBOARD_API_PATH = '/api/leaderboard'
 
 const isValidEntry = (entry) => {
   if (!entry || typeof entry !== 'object') {
@@ -69,6 +70,57 @@ export const addLeaderboardEntry = (entries, newEntry) => {
 export const removeLeaderboardEntry = (entries, entryId) => {
   const nextEntries = entries.filter((entry) => entry.id !== entryId)
   return saveLeaderboard(nextEntries)
+}
+
+const requestCloudLeaderboard = async (method, payload) => {
+  const response = await fetch(LEADERBOARD_API_PATH, {
+    method,
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: payload ? JSON.stringify(payload) : undefined,
+  })
+
+  if (!response.ok) {
+    throw new Error(`Leaderboard cloud request failed with status ${response.status}`)
+  }
+
+  const data = await response.json()
+  if (!data?.ok || !Array.isArray(data.entries)) {
+    throw new Error('Leaderboard cloud request returned an invalid payload')
+  }
+
+  return normalizeEntries(data.entries)
+}
+
+export const loadLeaderboardWithFallback = async () => {
+  try {
+    const cloudEntries = await requestCloudLeaderboard('GET')
+    saveLeaderboard(cloudEntries)
+    return cloudEntries
+  } catch {
+    return loadLeaderboard()
+  }
+}
+
+export const addLeaderboardEntryWithFallback = async (newEntry) => {
+  try {
+    const cloudEntries = await requestCloudLeaderboard('POST', newEntry)
+    saveLeaderboard(cloudEntries)
+    return cloudEntries
+  } catch {
+    return addLeaderboardEntry(loadLeaderboard(), newEntry)
+  }
+}
+
+export const removeLeaderboardEntryWithFallback = async (entryId) => {
+  try {
+    const cloudEntries = await requestCloudLeaderboard('DELETE', { id: entryId })
+    saveLeaderboard(cloudEntries)
+    return cloudEntries
+  } catch {
+    return removeLeaderboardEntry(loadLeaderboard(), entryId)
+  }
 }
 
 export const clearLeaderboard = () => {

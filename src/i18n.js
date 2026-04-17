@@ -139,7 +139,7 @@ const resources = {
                 bulletOne: "HangBot velger et skjult ord og gir hint + kategori.",
                 bulletTwo: "Hver runde bruker kun ekte ordbokord.",
                 bulletThree:
-                    "Poeng belønner seier, fa feil og høyere vanskelighetsgrad.",
+                    "Poeng belønner seier, få feil og høyere vanskelighetsgrad.",
                 topScore: "Toppscore:",
                 by: "av",
                 lastRound: "Siste runde:",

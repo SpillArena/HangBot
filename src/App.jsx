@@ -2,10 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import HangmanGame from './components/HangmanGame'
 import StartScreen from './components/StartScreen'
 import {
-  addLeaderboardEntry,
   loadLeaderboard,
+  loadLeaderboardWithFallback,
   loadRememberedUsername,
-  removeLeaderboardEntry,
+  addLeaderboardEntryWithFallback,
+  removeLeaderboardEntryWithFallback,
   rememberUsername,
 } from './utils/leaderboardStorage'
 
@@ -21,6 +22,22 @@ export default function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme
   }, [theme])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const hydrateLeaderboard = async () => {
+      const entries = await loadLeaderboardWithFallback()
+      if (!cancelled) {
+        setLeaderboard(entries)
+      }
+    }
+
+    hydrateLeaderboard()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -41,13 +58,15 @@ export default function App() {
     setScreen('game')
   }, [])
 
-  const handleRoundFinished = useCallback((entry) => {
+  const handleRoundFinished = useCallback(async (entry) => {
     setLastResult(entry)
-    setLeaderboard((previousEntries) => addLeaderboardEntry(previousEntries, entry))
+    const entries = await addLeaderboardEntryWithFallback(entry)
+    setLeaderboard(entries)
   }, [])
 
-  const handleDeleteLeaderboardEntry = useCallback((entryId) => {
-    setLeaderboard((previousEntries) => removeLeaderboardEntry(previousEntries, entryId))
+  const handleDeleteLeaderboardEntry = useCallback(async (entryId) => {
+    const entries = await removeLeaderboardEntryWithFallback(entryId)
+    setLeaderboard(entries)
   }, [])
 
   const handleToggleTheme = useCallback(() => {
