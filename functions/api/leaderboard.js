@@ -38,7 +38,13 @@ const json = (payload, status = 200) => new Response(JSON.stringify(payload), {
 const getDb = (context) => context.env?.DB
 
 const ensureTable = async (db) => {
-  await db.prepare(createTableSql).run()
+  const tableExists = await db
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'leaderboard'")
+    .first()
+
+  if (!tableExists) {
+    await db.exec(createTableSql)
+  }
 }
 
 const listEntries = async (db) => {

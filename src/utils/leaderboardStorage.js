@@ -87,40 +87,57 @@ const requestCloudLeaderboard = async (method, payload) => {
 
   const data = await response.json()
   if (!data?.ok || !Array.isArray(data.entries)) {
-    throw new Error('Leaderboard cloud request returned an invalid payload')
+    throw new Error(data?.message || 'Leaderboard cloud request returned an invalid payload')
+  }
+
+  if (data?.provider !== 'd1') {
+    throw new Error('D1 provider not active')
   }
 
   return normalizeEntries(data.entries)
 }
 
-export const loadLeaderboardWithFallback = async () => {
+const withCloudFallback = async (operation, fallbackOperation) => {
   try {
-    const cloudEntries = await requestCloudLeaderboard('GET')
-    saveLeaderboard(cloudEntries)
-    return cloudEntries
-  } catch {
-    return loadLeaderboard()
+    return await operation()
+  } catch (error) {
+    // Keep the app working and expose reason in browser console for diagnostics.
+    console.warn(`Leaderboard fallback to local storage: ${error?.message || 'unknown reason'}`)
+    return fallbackOperation()
   }
+}
+
+export const loadLeaderboardWithFallback = async () => {
+  return withCloudFallback(
+    async () => {
+      const cloudEntries = await requestCloudLeaderboard('GET')
+      saveLeaderboard(cloudEntries)
+      return cloudEntries
+    },
+    () => loadLeaderboard(),
+  )
 }
 
 export const addLeaderboardEntryWithFallback = async (newEntry) => {
-  try {
-    const cloudEntries = await requestCloudLeaderboard('POST', newEntry)
-    saveLeaderboard(cloudEntries)
-    return cloudEntries
-  } catch {
-    return addLeaderboardEntry(loadLeaderboard(), newEntry)
-  }
+  return withCloudFallback(
+    async () => {
+      const cloudEntries = await requestCloudLeaderboard('POST', newEntry)
+      saveLeaderboard(cloudEntries)
+      return cloudEntries
+    },
+    () => addLeaderboardEntry(loadLeaderboard(), newEntry),
+  )
 }
 
 export const removeLeaderboardEntryWithFallback = async (entryId) => {
-  try {
-    const cloudEntries = await requestCloudLeaderboard('DELETE', { id: entryId })
-    saveLeaderboard(cloudEntries)
-    return cloudEntries
-  } catch {
-    return removeLeaderboardEntry(loadLeaderboard(), entryId)
-  }
+  return withCloudFallback(
+    async () => {
+      const cloudEntries = await requestCloudLeaderboard('DELETE', { id: entryId })
+      saveLeaderboard(cloudEntries)
+      return cloudEntries
+    },
+    () => removeLeaderboardEntry(loadLeaderboard(), entryId),
+  )
 }
 
 export const clearLeaderboard = () => {
