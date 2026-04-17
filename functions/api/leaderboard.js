@@ -35,7 +35,24 @@ const json = (payload, status = 200) => new Response(JSON.stringify(payload), {
   },
 })
 
-const getDb = (context) => context.env?.DB
+const D1_BINDING_CANDIDATES = ['DB', 'LEADERBOARD_DB']
+
+const getDb = (context) => {
+  for (const bindingName of D1_BINDING_CANDIDATES) {
+    const db = context.env?.[bindingName]
+    if (db) {
+      return db
+    }
+  }
+
+  return null
+}
+
+const missingBindingPayload = () => ({
+  ok: false,
+  fallback: 'local',
+  message: `D1 binding is missing. Expected one of: ${D1_BINDING_CANDIDATES.join(', ')}`,
+})
 
 const ensureTable = async (db) => {
   const tableExists = await db
@@ -62,7 +79,7 @@ const listEntries = async (db) => {
 export const onRequestGet = async (context) => {
   const db = getDb(context)
   if (!db) {
-    return json({ ok: false, fallback: 'local', message: 'D1 binding DB is missing.' })
+    return json(missingBindingPayload())
   }
 
   try {
@@ -77,7 +94,7 @@ export const onRequestGet = async (context) => {
 export const onRequestPost = async (context) => {
   const db = getDb(context)
   if (!db) {
-    return json({ ok: false, fallback: 'local', message: 'D1 binding DB is missing.' })
+    return json(missingBindingPayload())
   }
 
   try {
@@ -116,7 +133,7 @@ export const onRequestPost = async (context) => {
 export const onRequestDelete = async (context) => {
   const db = getDb(context)
   if (!db) {
-    return json({ ok: false, fallback: 'local', message: 'D1 binding DB is missing.' })
+    return json(missingBindingPayload())
   }
 
   try {
