@@ -26,5 +26,5 @@ export const DIFFICULTY_CONFIG = {
 }
 
 export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
-export const MAX_LEADERBOARD_ENTRIES = 30
+export const MAX_LEADERBOARD_ENTRIES = 15
 

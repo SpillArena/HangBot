@@ -113,10 +113,12 @@ export default function HangmanGame({
   difficulty,
   onBackToLobby,
   onRoundFinished,
+  theme = 'dark',
   username,
 }) {
   const { i18n, t } = useTranslation()
   const language = i18n.language.startsWith('no') ? 'no' : 'en'
+  const isLightTheme = theme === 'light'
   const gameAlphabet = useMemo(
     () => (language === 'no' ? [...BASE_ALPHABET, ...NORWEGIAN_ALPHABET_EXT] : BASE_ALPHABET),
     [language],
@@ -187,6 +189,12 @@ export default function HangmanGame({
   )
 
   const attemptsLeft = Math.max(config.maxWrongGuesses - (round?.wrongGuesses ?? 0), 0)
+  const shellClassName = isLightTheme
+    ? 'mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-8 text-slate-900 md:px-8'
+    : 'mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-8 text-slate-100 md:px-8'
+  const panelClassName = isLightTheme
+    ? 'rounded-2xl border border-slate-200/90 bg-white/80 shadow-xl shadow-slate-300/25'
+    : 'rounded-2xl border border-slate-800/80 bg-slate-950/70 shadow-xl shadow-black/20'
 
   const startNextRound = useCallback(() => {
     loadRound(difficulty)
@@ -297,10 +305,10 @@ export default function HangmanGame({
 
   if (!round) {
     return (
-      <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-8 md:px-8">
-        <section className="rounded-2xl border border-slate-800/80 bg-slate-950/70 p-6 text-center shadow-xl shadow-black/20">
+      <main className={shellClassName}>
+        <section className={`${panelClassName} p-6 text-center`}>
           <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">HangBot</p>
-          <p className="mt-3 text-sm text-slate-200">
+          <p className={`mt-3 text-sm ${isLightTheme ? 'text-slate-700' : 'text-slate-200'}`}>
             {isLoadingRound ? t('game.generatingRound') : t('game.unableInitRound')}
           </p>
           <div className="mt-5 flex justify-center gap-2">
@@ -325,20 +333,20 @@ export default function HangmanGame({
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-8 md:px-8">
-      <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800/80 bg-slate-950/70 p-4 shadow-xl shadow-black/20">
+    <main className={shellClassName}>
+      <header className={`${panelClassName} flex flex-wrap items-center justify-between gap-3 p-4`}>
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">{t('game.player')}</p>
-          <h1 className="text-xl font-semibold text-white">{username}</h1>
+          <p className="text-xs uppercase tracking-[0.2em] text-cyan-400">{t('game.player')}</p>
+          <h1 className={`text-xl font-semibold ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>{username}</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide">
-          <span className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-slate-300">
+          <span className={isLightTheme ? 'rounded-full border border-slate-300 bg-white px-3 py-1 text-slate-700' : 'rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-slate-300'}>
             {t('game.difficulty')}: {localizedDifficultyLabel}
           </span>
-          <span className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-slate-300">
+          <span className={isLightTheme ? 'rounded-full border border-slate-300 bg-white px-3 py-1 text-slate-700' : 'rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-slate-300'}>
             {t('game.timer')}: {formatElapsedTime(roundSeconds)}
           </span>
-          <span className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-slate-300">
+          <span className={isLightTheme ? 'rounded-full border border-slate-300 bg-white px-3 py-1 text-slate-700' : 'rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-slate-300'}>
             {t('game.attemptsLeft')}: {attemptsLeft}
           </span>
           {isLoadingRound && (
@@ -346,46 +354,40 @@ export default function HangmanGame({
               {t('game.loadingWord')}
             </span>
           )}
-          <button
-            type="button"
-            className="rounded-full border border-rose-500/60 bg-rose-500/10 px-3 py-1 text-rose-200 transition hover:border-rose-400 hover:bg-rose-500/20 hover:text-rose-100"
-            onClick={onBackToLobby}
-          >
-            {t('game.backToLobby')}
-          </button>
+
         </div>
       </header>
 
       <section className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
-        <aside className="rounded-2xl border border-slate-800/80 bg-slate-950/70 p-4">
-          <p className="mb-1 text-xs uppercase tracking-[0.2em] text-slate-400">{t('game.botTransmission')}</p>
-          <ul className="space-y-1 text-sm text-slate-200">
+        <aside className={`${panelClassName} p-4`}>
+          <p className={`mb-1 text-xs uppercase tracking-[0.2em] ${isLightTheme ? 'text-slate-500' : 'text-slate-400'}`}>{t('game.botTransmission')}</p>
+          <ul className={`space-y-1 text-sm ${isLightTheme ? 'text-slate-700' : 'text-slate-200'}`}>
             <li>{round.introMessage}</li>
             <li>{t('game.category')}: {round.category}</li>
             <li>{t('game.source')}: {round.sourceText}</li>
           </ul>
 
-          <div className="mt-3 rounded-xl border border-slate-800 bg-slate-900/80 p-3">
-            <p className="text-xs uppercase tracking-wide text-slate-400">{t('game.hint')}</p>
-            <p className="mt-1 text-sm text-slate-200">{round.hint}</p>
+          <div className={isLightTheme ? 'mt-3 rounded-xl border border-slate-300 bg-slate-50 p-3' : 'mt-3 rounded-xl border border-slate-800 bg-slate-900/80 p-3'}>
+            <p className={`text-xs uppercase tracking-wide ${isLightTheme ? 'text-slate-500' : 'text-slate-400'}`}>{t('game.hint')}</p>
+            <p className={`mt-1 text-sm ${isLightTheme ? 'text-slate-700' : 'text-slate-200'}`}>{round.hint}</p>
           </div>
 
-          <div className="mt-3 rounded-xl border border-slate-800 bg-slate-900/80 p-3">
-            <p className="text-xs uppercase tracking-wide text-slate-400">{t('game.wrongLetters')}</p>
+          <div className={isLightTheme ? 'mt-3 rounded-xl border border-slate-300 bg-slate-50 p-3' : 'mt-3 rounded-xl border border-slate-800 bg-slate-900/80 p-3'}>
+            <p className={`text-xs uppercase tracking-wide ${isLightTheme ? 'text-slate-500' : 'text-slate-400'}`}>{t('game.wrongLetters')}</p>
             <p className="mt-1 min-h-6 font-mono text-sm text-rose-200">
               {wrongLetters.length > 0 ? wrongLetters.join(', ') : t('game.none')}
             </p>
           </div>
 
-          <pre className="mt-4 overflow-auto rounded-xl border border-slate-800 bg-slate-900 px-3 py-3 text-xs text-slate-200">
+          <pre className={isLightTheme ? 'mt-4 overflow-auto rounded-xl border border-slate-300 bg-slate-50 px-3 py-3 text-xs text-slate-700' : 'mt-4 overflow-auto rounded-xl border border-slate-800 bg-slate-900 px-3 py-3 text-xs text-slate-200'}>
             {HANGMAN_STAGES[stageIndex]}
           </pre>
         </aside>
 
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-950/70 p-5">
-          <div className="rounded-xl border border-slate-800 bg-slate-900/80 px-4 py-5">
-            <p className="mb-2 text-xs uppercase tracking-[0.2em] text-slate-400">{t('game.mysteryWord')}</p>
-            <p className="break-words font-mono text-2xl font-semibold tracking-[0.35em] text-white sm:text-3xl">
+        <div className={`${panelClassName} p-5`}>
+          <div className={isLightTheme ? 'rounded-xl border border-slate-300 bg-slate-50 px-4 py-5' : 'rounded-xl border border-slate-800 bg-slate-900/80 px-4 py-5'}>
+            <p className={`mb-2 text-xs uppercase tracking-[0.2em] ${isLightTheme ? 'text-slate-500' : 'text-slate-400'}`}>{t('game.mysteryWord')}</p>
+            <p className={`break-words font-mono text-2xl font-semibold tracking-[0.35em] sm:text-3xl ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
               {maskedWord}
             </p>
           </div>
@@ -407,7 +409,7 @@ export default function HangmanGame({
                     hasGuessed ? 'cursor-not-allowed' : 'hover:border-cyan-400 hover:text-cyan-100',
                     isHit ? 'border-emerald-400/40 bg-emerald-500/20 text-emerald-200' : '',
                     isMiss ? 'border-rose-400/40 bg-rose-500/20 text-rose-200' : '',
-                    !hasGuessed ? 'border-slate-700 bg-slate-900 text-slate-200' : '',
+                    !hasGuessed ? (isLightTheme ? 'border-slate-300 bg-white text-slate-800 hover:border-cyan-500 hover:text-cyan-700' : 'border-slate-700 bg-slate-900 text-slate-200') : '',
                   ].join(' ')}
                 >
                   {letter}
@@ -416,7 +418,7 @@ export default function HangmanGame({
             })}
           </div>
 
-          <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-3 text-xs text-slate-400">
+          <div className={isLightTheme ? 'mt-4 rounded-xl border border-slate-300 bg-slate-50 p-3 text-xs text-slate-600' : 'mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-3 text-xs text-slate-400'}>
             {t('game.keyboardTip', { alphabetLabel: language === 'no' ? 'A-Å' : 'A-Z' })}
           </div>
 
@@ -425,10 +427,10 @@ export default function HangmanGame({
               <h2 className="text-lg font-bold text-white">
                 {round.status === 'won' ? t('game.roundWon') : t('game.roundLost')}
               </h2>
-              <p className="mt-1 text-sm text-slate-200">
+              <p className={`mt-1 text-sm ${isLightTheme ? 'text-slate-700' : 'text-slate-200'}`}>
                 {t('game.correctWord')}: <span className="font-mono font-semibold">{round.word}</span>
               </p>
-              <p className="mt-1 text-sm text-slate-200">
+              <p className={`mt-1 text-sm ${isLightTheme ? 'text-slate-700' : 'text-slate-200'}`}>
                 {t('game.score')}: <span className="font-semibold text-cyan-200">{round.finalScore ?? 0}</span>
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -442,7 +444,7 @@ export default function HangmanGame({
                 <button
                   type="button"
                   onClick={onBackToLobby}
-                  className="rounded-lg border border-slate-600 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-200 transition hover:border-cyan-400 hover:text-cyan-200"
+                  className={isLightTheme ? 'rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-700 transition hover:border-cyan-500 hover:text-cyan-700' : 'rounded-lg border border-slate-600 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-200 transition hover:border-cyan-400 hover:text-cyan-200'}
                 >
                   {t('game.returnLobby')}
                 </button>
