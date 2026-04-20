@@ -26,6 +26,23 @@ const compareEntries = (a, b) => (
   || (Date.parse(b.timestamp) - Date.parse(a.timestamp))
 )
 
+const getUsernameKey = (username) => username.trim().toLowerCase()
+
+const dedupeByBestUsername = (entries) => {
+  const bestByUsername = new Map()
+
+  for (const entry of entries) {
+    const usernameKey = getUsernameKey(entry.username)
+    const currentBestEntry = bestByUsername.get(usernameKey)
+
+    if (!currentBestEntry || compareEntries(entry, currentBestEntry) < 0) {
+      bestByUsername.set(usernameKey, entry)
+    }
+  }
+
+  return [...bestByUsername.values()]
+}
+
 const normalizeEntries = (entries) => {
   if (!Array.isArray(entries)) {
     return []
@@ -38,7 +55,7 @@ const normalizeEntries = (entries) => {
     }
   }
 
-  return [...dedupedById.values()]
+  return dedupeByBestUsername([...dedupedById.values()])
     .sort(compareEntries)
     .slice(0, MAX_LEADERBOARD_ENTRIES)
 }

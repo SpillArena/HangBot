@@ -37,7 +37,7 @@ const resources = {
         translation: {
             start: {
                 appDescription:
-                    "Enter your username, pick difficulty, and challenge the bot's mystery words. Results are persisted in the local leaderboard.",
+                    "Enter your username, pick difficulty, and challenge the bot's mystery words. Your best score is saved!",
                 startRound: "Start a round",
                 username: "Username",
                 difficulty: "Difficulty",
@@ -59,6 +59,7 @@ const resources = {
                 dark: "Dark",
                 norwegian: "Norwegian",
                 english: "English",
+                backToArena: "Back to the Arena",
             },
             leaderboard: {
                 title: "Leaderboard",
@@ -90,7 +91,7 @@ const resources = {
                 timer: "Timer",
                 attemptsLeft: "Attempts left",
                 loadingWord: "Loading word...",
-                botTransmission: "Bot transmission",
+                botTransmission: "Message from the bot",
                 category: "Category",
                 source: "Source",
                 hint: "Hint",
@@ -105,8 +106,10 @@ const resources = {
                 score: "Score",
                 newWord: "New word",
                 returnLobby: "Return lobby",
+                giveUp: "Give up",
                 lowUniqueLetterWord:
                     "Low unique-letter word detected. Consonant sweeps are effective here.",
+                
             },
             difficulty: {
                 easy: { label: "Easy", description: "More attempts and direct hints." },
@@ -129,7 +132,7 @@ const resources = {
         translation: {
             start: {
                 appDescription:
-                    "Skriv inn brukernavn, velg vanskelighetsgrad, og utfordre botens skjulte ord. Resultater lagres i den lokale topplisten.",
+                    "Skriv inn brukernavn, velg vanskelighetsgrad, og utfordre botens skjulte ord. Din beste score lagres!",
                 startRound: "Start en runde",
                 username: "Brukernavn",
                 difficulty: "Vanskelighetsgrad",
@@ -152,6 +155,7 @@ const resources = {
                 dark: "Mørk",
                 norwegian: "Norsk",
                 english: "Engelsk",
+                backToArena: "Tilbake til Arenaen",
             },
             leaderboard: {
                 title: "Toppliste",
@@ -183,7 +187,7 @@ const resources = {
                 timer: "Tid",
                 attemptsLeft: "Forsok igjen",
                 loadingWord: "Laster ord...",
-                botTransmission: "Bot-overføring",
+                botTransmission: "Beskjed fra bot",
                 category: "Kategori",
                 source: "Kilde",
                 hint: "Hint",
@@ -198,6 +202,7 @@ const resources = {
                 score: "Poeng",
                 newWord: "Nytt ord",
                 returnLobby: "Tilbake til lobby",
+                giveUp: "Gi opp",
                 lowUniqueLetterWord:
                     "Ord med fa unike bokstaver oppdaget. Konsonant-sveip fungerer godt her.",
             },
