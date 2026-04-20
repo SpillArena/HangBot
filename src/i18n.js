@@ -91,7 +91,7 @@ const resources = {
                 timer: "Timer",
                 attemptsLeft: "Attempts left",
                 loadingWord: "Loading word...",
-                botTransmission: "Bot transmission",
+                botTransmission: "Message from the bot",
                 category: "Category",
                 source: "Source",
                 hint: "Hint",
@@ -106,6 +106,7 @@ const resources = {
                 score: "Score",
                 newWord: "New word",
                 returnLobby: "Return lobby",
+                giveUp: "Give up",
                 lowUniqueLetterWord:
                     "Low unique-letter word detected. Consonant sweeps are effective here.",
                 
@@ -186,7 +187,7 @@ const resources = {
                 timer: "Tid",
                 attemptsLeft: "Forsok igjen",
                 loadingWord: "Laster ord...",
-                botTransmission: "Bot-overføring",
+                botTransmission: "Beskjed fra bot",
                 category: "Kategori",
                 source: "Kilde",
                 hint: "Hint",
@@ -201,6 +202,7 @@ const resources = {
                 score: "Poeng",
                 newWord: "Nytt ord",
                 returnLobby: "Tilbake til lobby",
+                giveUp: "Gi opp",
                 lowUniqueLetterWord:
                     "Ord med fa unike bokstaver oppdaget. Konsonant-sveip fungerer godt her.",
             },

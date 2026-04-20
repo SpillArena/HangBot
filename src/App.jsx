@@ -125,31 +125,31 @@ export default function App() {
     setTheme((previousTheme) => (previousTheme === 'dark' ? 'light' : 'dark'))
   }, [])
 
-  const arenaButtonClassName =
-  theme === "light"
-    ? "z-50 inline-flex items-center rounded-full border border-rose-500/60 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-rose-900 shadow-lg shadow-black/10 backdrop-blur transition hover:border-rose-400 hover:bg-white/85 hover:text-rose-950"
-    : "z-50 inline-flex items-center rounded-full border border-rose-500/60 bg-slate-950/80 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-rose-200 shadow-lg shadow-black/25 transition hover:border-rose-400 hover:bg-slate-900/90 hover:text-rose-100";
+  const lobbyArenaButtonClassName =
+    theme === "light"
+      ? "z-50 inline-flex items-center rounded-full border border-rose-500/60 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-rose-900 shadow-lg shadow-black/10 backdrop-blur transition hover:border-rose-400 hover:bg-white/85 hover:text-rose-950"
+      : "z-50 inline-flex items-center rounded-full border border-rose-500/60 bg-slate-950/80 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-rose-200 shadow-lg shadow-black/25 transition hover:border-rose-400 hover:bg-slate-900/90 hover:text-rose-100";
 
   return (
     <div className="min-h-screen text-[var(--app-fg)] flex flex-col items-start justify-start gap-0 py-10 px-4">
       <div className="mx-auto w-full max-w-7xl px-8">
         {screen === 'game' ? (
-          <a
-          href={arenaUrl}
-          className={arenaButtonClassName}
-        >
-          {t('game.backToLobby')}
-          </a>
+          <button
+            onClick={() => setScreen('start')}
+            className={lobbyArenaButtonClassName}
+          >
+            {t('game.giveUp')}
+          </button>
         ) : (
           <a
-          href={arenaUrl}
-          className={arenaButtonClassName}
-        >
-          {t('start.backToArena')}
+            href={arenaUrl}
+            className={lobbyArenaButtonClassName}
+          >
+            {t('start.backToArena')}
           </a>
-        )}  
+        )}
 
-        
+
       </div>
       {screen === 'start' ? (
         <StartScreen
