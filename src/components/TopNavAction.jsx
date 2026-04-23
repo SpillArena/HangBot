@@ -4,6 +4,7 @@ export default function TopNavAction({
     onGiveUp,
     backToHubLabel = 'Back to hub',
     giveUpLabel = 'Give up',
+    activeGameLabel,
     theme = 'dark',
 }) {
     const isLightTheme = theme === 'light'
@@ -22,7 +23,7 @@ export default function TopNavAction({
 
     return (
         <button type="button" onClick={onGiveUp} className={className}>
-            {giveUpLabel}
+            {activeGameLabel ?? giveUpLabel}
         </button>
     )
 }

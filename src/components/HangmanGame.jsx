@@ -75,10 +75,15 @@ const formatElapsedTime = (totalSeconds) => {
   return `${minutes}:${seconds}`
 }
 
+const getRoundDurationSeconds = (difficulty) =>
+  DIFFICULTY_CONFIG[difficulty]?.roundDurationSeconds ??
+  DIFFICULTY_CONFIG.medium.roundDurationSeconds
+
 export default function HangmanGame({
   difficulty,
   onBackToLobby,
   onRoundFinished,
+  onRoundStatusChange,
   theme = 'dark',
   username,
 }) {
@@ -97,7 +102,9 @@ export default function HangmanGame({
 
   const [round, setRound] = useState(null)
   const [isLoadingRound, setIsLoadingRound] = useState(true)
-  const [roundSeconds, setRoundSeconds] = useState(0)
+  const [timeRemainingSeconds, setTimeRemainingSeconds] = useState(
+    getRoundDurationSeconds(difficulty),
+  )
   const [isRevealing, setIsRevealing] = useState(false)
   const reportedRoundIdsRef = useRef(new Set())
 
@@ -105,10 +112,10 @@ export default function HangmanGame({
     async (nextDifficulty) => {
       setIsLoadingRound(true)
       setIsRevealing(false)
-      setRoundSeconds(0)
 
       const nextRound = await createRound(nextDifficulty, language)
 
+      setTimeRemainingSeconds(getRoundDurationSeconds(nextRound.difficulty))
       setRound(nextRound)
       setIsLoadingRound(false)
 
@@ -131,7 +138,7 @@ export default function HangmanGame({
       if (cancelled) return
 
       setRound(nextRound)
-      setRoundSeconds(0)
+      setTimeRemainingSeconds(getRoundDurationSeconds(nextRound.difficulty))
       setIsLoadingRound(false)
 
       requestAnimationFrame(() => {
@@ -154,10 +161,37 @@ export default function HangmanGame({
   const roundStatus = round?.status ?? 'playing'
 
   useEffect(() => {
+    if (typeof onRoundStatusChange !== 'function') return
+    onRoundStatusChange(roundStatus)
+  }, [onRoundStatusChange, roundStatus])
+
+  useEffect(() => {
     if (!roundId || isLoadingRound || roundStatus !== 'playing') return
 
     const timerId = window.setInterval(() => {
-      setRoundSeconds((prev) => prev + 1)
+      setTimeRemainingSeconds((prev) => {
+        if (prev <= 1) {
+          setRound((prevRound) => {
+            if (!prevRound || prevRound.status !== 'playing') return prevRound
+
+            return {
+              ...prevRound,
+              status: 'lost',
+              finalScore: calculateRoundScore({
+                difficulty: prevRound.difficulty,
+                guessedLetters: prevRound.guessedLetters,
+                status: 'lost',
+                word: prevRound.word,
+                wrongGuesses: prevRound.wrongGuesses,
+              }),
+            }
+          })
+
+          return 0
+        }
+
+        return prev - 1
+      })
     }, 1000)
 
     return () => window.clearInterval(timerId)
@@ -202,6 +236,22 @@ export default function HangmanGame({
     config.maxWrongGuesses - (round?.wrongGuesses ?? 0),
     0,
   )
+  const totalRoundDuration = getRoundDurationSeconds(activeDifficulty)
+  const timeRatio = totalRoundDuration > 0
+    ? timeRemainingSeconds / totalRoundDuration
+    : 0
+  const timerToneClassName = isLightTheme
+    ? timeRatio > 0.5
+      ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+      : timeRatio > 0.2
+        ? 'border-orange-300 bg-orange-50 text-orange-700'
+        : 'border-rose-300 bg-rose-50 text-rose-700'
+    : timeRatio > 0.5
+      ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-200'
+      : timeRatio > 0.2
+        ? 'border-orange-500/40 bg-orange-500/15 text-orange-200'
+        : 'border-rose-500/40 bg-rose-500/15 text-rose-200'
+  const isTimerCritical = timeRatio <= 0.2
 
   const shellClassName = isLightTheme
     ? 'mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-8 text-slate-900 md:px-8'
@@ -435,13 +485,9 @@ export default function HangmanGame({
             </span>
 
             <span
-              className={
-                isLightTheme
-                  ? 'rounded-full border border-slate-300 bg-white px-3 py-1 text-slate-700'
-                  : 'rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-slate-300'
-              }
+              className={`rounded-full px-3 py-1 ${timerToneClassName} ${isTimerCritical ? 'animate-pulse' : ''}`}
             >
-              {t('game.timer')}: {formatElapsedTime(roundSeconds)}
+              {t('game.timer')}: {formatElapsedTime(timeRemainingSeconds)}
             </span>
 
             <span

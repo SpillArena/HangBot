@@ -34,6 +34,7 @@ const getInitialTheme = () => {
 export default function App() {
   const { t } = useTranslation()
   const [screen, setScreen] = useState('start')
+  const [activeRoundStatus, setActiveRoundStatus] = useState('playing')
   const [username, setUsername] = useState(() => loadRememberedUsername())
   const [difficulty, setDifficulty] = useState('medium')
   const [leaderboard, setLeaderboard] = useState(() => loadLeaderboard())
@@ -111,7 +112,13 @@ export default function App() {
     setUsername(nextUsername)
     setDifficulty(nextDifficulty)
     rememberUsername(nextUsername)
+    setActiveRoundStatus('playing')
     setScreen('game')
+  }, [])
+
+  const handleBackToLobby = useCallback(() => {
+    setScreen('start')
+    setActiveRoundStatus('playing')
   }, [])
 
   const handleRoundFinished = useCallback(async (entry) => {
@@ -137,9 +144,14 @@ export default function App() {
         <TopNavAction
           isGameActive={screen === 'game'}
           hubUrl={arenaUrl}
-          onGiveUp={() => setScreen('start')}
+          onGiveUp={handleBackToLobby}
           backToHubLabel={t('start.backToArena')}
           giveUpLabel={t('game.giveUp')}
+          activeGameLabel={
+            activeRoundStatus === 'won' || activeRoundStatus === 'lost'
+              ? t('game.backToLobby')
+              : t('game.giveUp')
+          }
           theme={theme}
         />
       </div>
@@ -158,8 +170,9 @@ export default function App() {
       ) : (
         <HangmanGame
           difficulty={difficulty}
-          onBackToLobby={() => setScreen('start')}
+          onBackToLobby={handleBackToLobby}
           onRoundFinished={handleRoundFinished}
+          onRoundStatusChange={setActiveRoundStatus}
           theme={theme}
           username={username}
         />
