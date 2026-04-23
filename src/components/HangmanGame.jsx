@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { DIFFICULTY_CONFIG } from '../constants/gameConfig'
+import { ALPHABET, DIFFICULTY_CONFIG, NORWEGIAN_ALPHABET_EXT } from '../constants/gameConfig'
 import { generateBotWord } from '../utils/botWordFactory'
-
-const BASE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
-const NORWEGIAN_ALPHABET_EXT = ['Æ', 'Ø', 'Å']
 
 const HANGMAN_STAGES = [
   ` +---+
@@ -184,8 +181,8 @@ export default function HangmanGame({
   const gameAlphabet = useMemo(
     () =>
       language === 'no'
-        ? [...BASE_ALPHABET, ...NORWEGIAN_ALPHABET_EXT]
-        : BASE_ALPHABET,
+        ? [...ALPHABET, ...NORWEGIAN_ALPHABET_EXT]
+        : ALPHABET,
     [language],
   )
   const [round, setRound] = useState(null)

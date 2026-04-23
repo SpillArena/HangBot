@@ -21,10 +21,17 @@ export const DIFFICULTY_CONFIG = {
     label: 'Insane',
     maxWrongGuesses: 5,
     multiplier: 2.1,
-    description: 'Longest, toughest dictionary words.',
+    description: 'Longer, tougher dictionary words.',
+  },
+  impossible: {
+    label: 'Impossible',
+    maxWrongGuesses: 3,
+    multiplier: 2.8,
+    description: 'The longest, toughest dictionary words with only 3 attempts.',
   },
 }
 
 export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+export const NORWEGIAN_ALPHABET_EXT = ['Æ', 'Ø', 'Å']
 export const MAX_LEADERBOARD_ENTRIES = 15
 
