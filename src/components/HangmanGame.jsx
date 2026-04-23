@@ -1,62 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { DIFFICULTY_CONFIG } from '../constants/gameConfig'
+import {
+  ALPHABET,
+  DIFFICULTY_CONFIG,
+  NORWEGIAN_ALPHABET_EXT,
+} from '../constants/gameConfig'
+import { HANGMAN_STAGES } from '../constants/hangmanStages'
 import { generateBotWord } from '../utils/botWordFactory'
+import LoadingScreen from './LoadingScreen'
 
-const BASE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
-const NORWEGIAN_ALPHABET_EXT = ['Æ', 'Ø', 'Å']
+const getNavButtonClassName = (isLightTheme) =>
+  isLightTheme
+    ? 'inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-cyan-500 hover:text-cyan-700'
+    : 'inline-flex items-center justify-center rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 shadow-sm transition hover:border-cyan-400 hover:text-cyan-200'
 
-const HANGMAN_STAGES = [
-  ` +---+
- |   |
-     |
-     |
-     |
-     |
-========`,
-  ` +---+
- |   |
- O   |
-     |
-     |
-     |
-========`,
-  ` +---+
- |   |
- O   |
- |   |
-     |
-     |
-========`,
-  ` +---+
- |   |
- O   |
-/|   |
-     |
-     |
-========`,
-  ` +---+
- |   |
- O   |
-/|\\  |
-     |
-     |
-========`,
-  ` +---+
- |   |
- O   |
-/|\\  |
-/    |
-     |
-========`,
-  ` +---+
- |   |
- O   |
-/|\\  |
-/ \\  |
-     |
-========`,
-]
 
 const createRoundId = () =>
   typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
@@ -76,6 +33,7 @@ const calculateRoundScore = ({
   if (status === 'won') {
     const baseScore = word.length * 45 + uniqueLetterCount * 85
     const precisionBonus = (config.maxWrongGuesses - wrongGuesses) * 65
+
     return Math.max(
       0,
       Math.round((baseScore + precisionBonus) * config.multiplier),
@@ -86,6 +44,7 @@ const calculateRoundScore = ({
     guessedLetters.filter((letter) => word.includes(letter)),
   ).size
   const fallbackScore = discoveredLetters * 35 + word.length * 10
+
   return Math.max(0, Math.round(fallbackScore * config.multiplier))
 }
 
@@ -108,90 +67,44 @@ const createRound = async (difficulty, language) => {
 }
 
 const formatElapsedTime = (totalSeconds) => {
-  const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0')
+  const minutes = Math.floor(totalSeconds / 60)
+    .toString()
+    .padStart(2, '0')
   const seconds = (totalSeconds % 60).toString().padStart(2, '0')
+
   return `${minutes}:${seconds}`
 }
 
-// Animated dots for loading indicator
-function LoadingDots() {
-  return (
-    <span className="inline-flex gap-1">
-      {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-400"
-          style={{ animationDelay: `${i * 0.15}s`, animationDuration: '0.9s' }}
-        />
-      ))}
-    </span>
-  )
-}
-
-// Full-screen loading overlay shown while generating a round
-function GeneratingOverlay({ isLightTheme, label }) {
-  return (
-    <div
-      className={[
-        'flex min-h-screen w-full flex-col items-center justify-center gap-6',
-        'animate-fade-in',
-        isLightTheme ? 'bg-slate-50 text-slate-900' : 'bg-slate-950 text-slate-100',
-      ].join(' ')}
-    >
-      {/* Pulsing hangman scaffold */}
-      <pre
-        className={[
-          'select-none font-mono text-xs leading-snug',
-          'animate-pulse',
-          isLightTheme ? 'text-slate-400' : 'text-slate-600',
-        ].join(' ')}
-      >
-        {HANGMAN_STAGES[0]}
-      </pre>
-
-      <div className="flex flex-col items-center gap-2">
-        <p className="text-xs uppercase tracking-[0.2em] text-cyan-400">
-          HangBot
-        </p>
-        <p
-          className={`text-sm ${isLightTheme ? 'text-slate-600' : 'text-slate-300'}`}
-        >
-          {label}
-        </p>
-        <LoadingDots />
-      </div>
-
-      {/* Scanning bar */}
-      <div
-        className={`h-px w-48 overflow-hidden rounded-full ${isLightTheme ? 'bg-slate-200' : 'bg-slate-800'}`}
-      >
-        <div className="h-full w-1/3 animate-scanning rounded-full bg-cyan-400" />
-      </div>
-    </div>
-  )
-}
+const getRoundDurationSeconds = (difficulty) =>
+  DIFFICULTY_CONFIG[difficulty]?.roundDurationSeconds ??
+  DIFFICULTY_CONFIG.medium.roundDurationSeconds
 
 export default function HangmanGame({
   difficulty,
   onBackToLobby,
   onRoundFinished,
+  onRoundStatusChange,
   theme = 'dark',
   username,
 }) {
   const { i18n, t } = useTranslation()
   const language = i18n.language.startsWith('no') ? 'no' : 'en'
   const isLightTheme = theme === 'light'
+  const navButtonClassName = getNavButtonClassName(isLightTheme)
+
   const gameAlphabet = useMemo(
     () =>
       language === 'no'
-        ? [...BASE_ALPHABET, ...NORWEGIAN_ALPHABET_EXT]
-        : BASE_ALPHABET,
+        ? [...ALPHABET, ...NORWEGIAN_ALPHABET_EXT]
+        : ALPHABET,
     [language],
   )
+
   const [round, setRound] = useState(null)
   const [isLoadingRound, setIsLoadingRound] = useState(true)
-  const [roundSeconds, setRoundSeconds] = useState(0)
-  // Controls the reveal animation after loading completes
+  const [timeRemainingSeconds, setTimeRemainingSeconds] = useState(
+    getRoundDurationSeconds(difficulty),
+  )
   const [isRevealing, setIsRevealing] = useState(false)
   const reportedRoundIdsRef = useRef(new Set())
 
@@ -199,11 +112,13 @@ export default function HangmanGame({
     async (nextDifficulty) => {
       setIsLoadingRound(true)
       setIsRevealing(false)
-      setRoundSeconds(0)
+
       const nextRound = await createRound(nextDifficulty, language)
+
+      setTimeRemainingSeconds(getRoundDurationSeconds(nextRound.difficulty))
       setRound(nextRound)
       setIsLoadingRound(false)
-      // Tiny delay so the DOM has painted the hidden state before animating in
+
       requestAnimationFrame(() => {
         requestAnimationFrame(() => setIsRevealing(true))
       })
@@ -215,20 +130,28 @@ export default function HangmanGame({
     let cancelled = false
 
     const initializeRound = async () => {
+      setIsLoadingRound(true)
+      setIsRevealing(false)
+
       const nextRound = await createRound(difficulty, language)
+
       if (cancelled) return
 
       setRound(nextRound)
-      setRoundSeconds(0)
+      setTimeRemainingSeconds(getRoundDurationSeconds(nextRound.difficulty))
       setIsLoadingRound(false)
+
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          if (!cancelled) setIsRevealing(true)
+          if (!cancelled) {
+            setIsRevealing(true)
+          }
         })
       })
     }
 
     initializeRound()
+
     return () => {
       cancelled = true
     }
@@ -238,10 +161,37 @@ export default function HangmanGame({
   const roundStatus = round?.status ?? 'playing'
 
   useEffect(() => {
+    if (typeof onRoundStatusChange !== 'function') return
+    onRoundStatusChange(roundStatus)
+  }, [onRoundStatusChange, roundStatus])
+
+  useEffect(() => {
     if (!roundId || isLoadingRound || roundStatus !== 'playing') return
 
     const timerId = window.setInterval(() => {
-      setRoundSeconds((prev) => prev + 1)
+      setTimeRemainingSeconds((prev) => {
+        if (prev <= 1) {
+          setRound((prevRound) => {
+            if (!prevRound || prevRound.status !== 'playing') return prevRound
+
+            return {
+              ...prevRound,
+              status: 'lost',
+              finalScore: calculateRoundScore({
+                difficulty: prevRound.difficulty,
+                guessedLetters: prevRound.guessedLetters,
+                status: 'lost',
+                word: prevRound.word,
+                wrongGuesses: prevRound.wrongGuesses,
+              }),
+            }
+          })
+
+          return 0
+        }
+
+        return prev - 1
+      })
     }, 1000)
 
     return () => window.clearInterval(timerId)
@@ -249,43 +199,64 @@ export default function HangmanGame({
 
   const activeDifficulty = round?.difficulty ?? difficulty
   const config = DIFFICULTY_CONFIG[activeDifficulty] ?? DIFFICULTY_CONFIG.medium
-  const localizedDifficultyLabel = t(`difficulty.${activeDifficulty}.label`, {
-    defaultValue: config.label,
-  })
+
+  const localizedDifficultyLabel = t(
+    config.labelKey ?? `difficulty.${activeDifficulty}.label`,
+    {
+      defaultValue: activeDifficulty,
+    },
+  )
+
   const uniqueLetters = useMemo(
     () => (round ? [...new Set(round.word.split(''))] : []),
     [round],
   )
+
   const guessedSet = useMemo(
     () => new Set(round?.guessedLetters ?? []),
     [round?.guessedLetters],
   )
-  const wrongLetters = useMemo(
-    () =>
-      round
-        ? round.guessedLetters.filter((letter) => !round.word.includes(letter))
-        : [],
-    [round],
-  )
 
-  const maskedWord = useMemo(
-    () =>
-      round
-        ? round.word
-            .split('')
-            .map((letter) => (guessedSet.has(letter) ? letter : '•'))
-            .join(' ')
-        : '',
-    [guessedSet, round],
-  )
+  const wrongLetters = useMemo(() => {
+    if (!round) return []
+
+    return round.guessedLetters.filter((letter) => !round.word.includes(letter))
+  }, [round])
+
+  const maskedWord = useMemo(() => {
+    if (!round) return ''
+
+    return round.word
+      .split('')
+      .map((letter) => (guessedSet.has(letter) ? letter : '•'))
+      .join(' ')
+  }, [guessedSet, round])
 
   const attemptsLeft = Math.max(
     config.maxWrongGuesses - (round?.wrongGuesses ?? 0),
     0,
   )
+  const totalRoundDuration = getRoundDurationSeconds(activeDifficulty)
+  const timeRatio = totalRoundDuration > 0
+    ? timeRemainingSeconds / totalRoundDuration
+    : 0
+  const timerToneClassName = isLightTheme
+    ? timeRatio > 0.5
+      ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+      : timeRatio > 0.2
+        ? 'border-orange-300 bg-orange-50 text-orange-700'
+        : 'border-rose-300 bg-rose-50 text-rose-700'
+    : timeRatio > 0.5
+      ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-200'
+      : timeRatio > 0.2
+        ? 'border-orange-500/40 bg-orange-500/15 text-orange-200'
+        : 'border-rose-500/40 bg-rose-500/15 text-rose-200'
+  const isTimerCritical = timeRatio <= 0.2
+
   const shellClassName = isLightTheme
     ? 'mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-8 text-slate-900 md:px-8'
     : 'mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-8 text-slate-100 md:px-8'
+
   const panelClassName = isLightTheme
     ? 'rounded-2xl border border-slate-200/90 bg-white/80 shadow-xl shadow-slate-300/25'
     : 'rounded-2xl border border-slate-800/80 bg-slate-950/70 shadow-xl shadow-black/20'
@@ -299,6 +270,7 @@ export default function HangmanGame({
       if (!round || isLoadingRound) return
 
       const letter = rawLetter.toUpperCase()
+
       if (!gameAlphabet.includes(letter)) return
 
       setRound((prevRound) => {
@@ -306,18 +278,22 @@ export default function HangmanGame({
           !prevRound ||
           prevRound.status !== 'playing' ||
           prevRound.guessedLetters.includes(letter)
-        )
+        ) {
           return prevRound
+        }
 
         const nextGuessedLetters = [...prevRound.guessedLetters, letter]
         const wrongDelta = prevRound.word.includes(letter) ? 0 : 1
         const nextWrongGuesses = prevRound.wrongGuesses + wrongDelta
         const nextUniqueLetters = [...new Set(prevRound.word.split(''))]
+
         const solved = nextUniqueLetters.every((wordLetter) =>
           nextGuessedLetters.includes(wordLetter),
         )
+
         const difficultyConfig =
           DIFFICULTY_CONFIG[prevRound.difficulty] ?? DIFFICULTY_CONFIG.medium
+
         const lost = nextWrongGuesses >= difficultyConfig.maxWrongGuesses
         const nextStatus = solved ? 'won' : lost ? 'lost' : 'playing'
 
@@ -349,6 +325,7 @@ export default function HangmanGame({
 
       const normalizedKey =
         typeof event.key === 'string' ? event.key.toUpperCase() : ''
+
       if (gameAlphabet.includes(normalizedKey)) {
         event.preventDefault()
         handleGuess(normalizedKey)
@@ -362,16 +339,19 @@ export default function HangmanGame({
     }
 
     window.addEventListener('keydown', handleKeyDown)
+
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [gameAlphabet, handleGuess, isLoadingRound, round, startNextRound])
 
   useEffect(() => {
     if (!round) return
-    if (round.status === 'playing' || typeof onRoundFinished !== 'function')
+    if (round.status === 'playing' || typeof onRoundFinished !== 'function') {
       return
+    }
     if (reportedRoundIdsRef.current.has(round.roundId)) return
 
     reportedRoundIdsRef.current.add(round.roundId)
+
     onRoundFinished({
       id: round.roundId,
       username,
@@ -390,24 +370,45 @@ export default function HangmanGame({
   const stageIndex = Math.min(
     HANGMAN_STAGES.length - 1,
     Math.round(
-      (((round?.wrongGuesses ?? 0) / config.maxWrongGuesses) *
-        (HANGMAN_STAGES.length - 1)),
+      ((round?.wrongGuesses ?? 0) / config.maxWrongGuesses) *
+        (HANGMAN_STAGES.length - 1),
     ),
   )
 
-  // Show full-screen loader while no round exists yet
   if (isLoadingRound && !round) {
     return (
-      <GeneratingOverlay
+      <LoadingScreen
         isLightTheme={isLightTheme}
         label={t('game.generatingRound')}
+        fullscreen
       />
     )
   }
 
   if (!round) {
     return (
-      <main className={shellClassName}>
+      <main
+        className={[
+          shellClassName,
+          'transition-all duration-500 ease-out',
+          isRevealing && !isLoadingRound
+            ? 'translate-y-0 opacity-100'
+            : 'translate-y-3 opacity-0',
+        ].join(' ')}
+      >
+        <div className="flex items-center justify-start">
+          <button
+            type="button"
+            onClick={onBackToLobby}
+            className={navButtonClassName}
+          >
+            {t('game.backToLobby')}
+          </button>
+        </div>
+
+        <header
+          className={`${panelClassName} flex flex-wrap items-center justify-between gap-3 p-4`}
+        >
         <section className={`${panelClassName} p-6 text-center`}>
           <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">
             HangBot
@@ -434,29 +435,19 @@ export default function HangmanGame({
             </button>
           </div>
         </section>
+        </header>
       </main>
     )
   }
 
   return (
     <>
-      {/* Overlay shown while reloading between rounds */}
       {isLoadingRound && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
-          <div
-            className={`flex flex-col items-center gap-3 rounded-2xl border p-8 shadow-2xl ${
-              isLightTheme
-                ? 'border-slate-200 bg-white/90 text-slate-700'
-                : 'border-slate-800 bg-slate-950/90 text-slate-200'
-            }`}
-          >
-            <p className="text-xs uppercase tracking-[0.2em] text-cyan-400">
-              HangBot
-            </p>
-            <p className="text-sm">{t('game.generatingRound')}</p>
-            <LoadingDots />
-          </div>
-        </div>
+        <LoadingScreen
+          isLightTheme={isLightTheme}
+          label={t('game.generatingRound')}
+          fullscreen
+        />
       )}
 
       <main
@@ -481,6 +472,7 @@ export default function HangmanGame({
               {username}
             </h1>
           </div>
+
           <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide">
             <span
               className={
@@ -491,15 +483,13 @@ export default function HangmanGame({
             >
               {t('game.difficulty')}: {localizedDifficultyLabel}
             </span>
+
             <span
-              className={
-                isLightTheme
-                  ? 'rounded-full border border-slate-300 bg-white px-3 py-1 text-slate-700'
-                  : 'rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-slate-300'
-              }
+              className={`rounded-full px-3 py-1 ${timerToneClassName} ${isTimerCritical ? 'animate-pulse' : ''}`}
             >
-              {t('game.timer')}: {formatElapsedTime(roundSeconds)}
+              {t('game.timer')}: {formatElapsedTime(timeRemainingSeconds)}
             </span>
+
             <span
               className={
                 isLightTheme
@@ -519,6 +509,7 @@ export default function HangmanGame({
             >
               {t('game.botTransmission')}
             </p>
+
             <ul
               className={`space-y-1 text-sm ${isLightTheme ? 'text-slate-700' : 'text-slate-200'}`}
             >
@@ -651,27 +642,42 @@ export default function HangmanGame({
 
             {round.status !== 'playing' && (
               <div
-                className={`mt-5 rounded-xl border p-4 ${round.status === 'won' ? 'border-emerald-400/40 bg-emerald-500/10' : 'border-rose-400/40 bg-rose-500/10'}`}
+                className={`mt-5 rounded-xl border p-4 ${
+                  round.status === 'won'
+                    ? 'border-emerald-400/40 bg-emerald-500/10'
+                    : 'border-rose-400/40 bg-rose-500/10'
+                }`}
               >
-                <h2 className="text-lg font-bold text-white">
+                <h2
+                  className={`text-lg font-bold ${
+                    isLightTheme ? 'text-slate-900' : 'text-white'
+                  }`}
+                >
                   {round.status === 'won'
                     ? t('game.roundWon')
                     : t('game.roundLost')}
                 </h2>
+
                 <p
                   className={`mt-1 text-sm ${isLightTheme ? 'text-slate-700' : 'text-slate-200'}`}
                 >
                   {t('game.correctWord')}:{' '}
                   <span className="font-mono font-semibold">{round.word}</span>
                 </p>
+
                 <p
                   className={`mt-1 text-sm ${isLightTheme ? 'text-slate-700' : 'text-slate-200'}`}
                 >
                   {t('game.score')}:{' '}
-                  <span className="font-semibold text-cyan-200">
+                  <span
+                    className={`font-semibold ${
+                      isLightTheme ? 'text-cyan-700' : 'text-cyan-200'
+                    }`}
+                  >
                     {round.finalScore ?? 0}
                   </span>
                 </p>
+
                 <div className="mt-4 flex flex-wrap gap-2">
                   <button
                     type="button"
@@ -680,6 +686,7 @@ export default function HangmanGame({
                   >
                     {t('game.newWord')}
                   </button>
+
                   <button
                     type="button"
                     onClick={onBackToLobby}

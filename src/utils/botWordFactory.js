@@ -23,6 +23,7 @@ const WORD_LENGTH_BY_DIFFICULTY = {
   medium: [6, 8],
   hard: [8, 10],
   insane: [9, 12],
+  impossible: [12, 15],
 }
 
 const PART_OF_SPEECH_CATEGORY = {

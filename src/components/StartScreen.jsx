@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DIFFICULTY_CONFIG } from '../constants/gameConfig'
+import LoadingScreen from './LoadingScreen'
 import Leaderboard from './Leaderboard'
 
 export default function StartScreen({
@@ -27,12 +28,15 @@ export default function StartScreen({
   const toggleButtonClassName = isLightTheme
     ? 'inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-800 transition hover:border-cyan-500 hover:text-cyan-700'
     : 'inline-flex items-center gap-1 rounded-full border border-slate-600 bg-slate-800/80 px-3 py-1 text-xs font-semibold text-slate-100 transition hover:border-cyan-400 hover:text-cyan-100'
+
   const [username, setUsername] = useState(defaultUsername)
   const [difficulty, setDifficulty] = useState('medium')
   const [error, setError] = useState('')
+  const [isStarting, setIsStarting] = useState(false)
+
   const bestEntry = useMemo(() => leaderboard[0] ?? null, [leaderboard])
 
-  const handleStart = (event) => {
+  const handleStart = async (event) => {
     event.preventDefault()
     const trimmed = username.trim()
 
@@ -42,12 +46,27 @@ export default function StartScreen({
     }
 
     setError('')
-    onStart(trimmed, difficulty)
+    setIsStarting(true)
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        onStart(trimmed, difficulty)
+      })
+    })
   }
 
+  if (isStarting) {
+    return (
+      <LoadingScreen
+        isLightTheme={isLightTheme}
+        label={t('game.generatingRound')}
+        fullscreen
+      />
+    )
+  }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-8 md:px-8">
+    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-2 md:px-8">
       <header
         className={
           isLightTheme
@@ -70,6 +89,7 @@ export default function StartScreen({
             <span>{isLightTheme ? t('start.light') : t('start.dark')}</span>
           </button>
         </div>
+
         <p className={`mt-3 max-w-3xl text-sm md:text-base ${mutedTextClassName}`}>
           {t('start.appDescription')}
         </p>
@@ -82,6 +102,7 @@ export default function StartScreen({
           >
             {t('start.startRound')}
           </h2>
+
           <form className="mt-4 space-y-4" onSubmit={handleStart}>
             <div className="space-y-2">
               <label htmlFor="username" className={`text-sm ${mutedTextClassName}`}>
@@ -110,8 +131,7 @@ export default function StartScreen({
               >
                 {Object.entries(DIFFICULTY_CONFIG).map(([key, config]) => (
                   <option key={key} value={key}>
-                    {t(`difficulty.${key}.label`, { defaultValue: config.label })} -{' '}
-                    {t(`difficulty.${key}.description`, { defaultValue: config.description })}
+                    {t(config.labelKey)} - {t(config.descriptionKey)}
                   </option>
                 ))}
               </select>
@@ -140,7 +160,8 @@ export default function StartScreen({
 
             <button
               type="submit"
-              className="w-full rounded-xl bg-cyan-400 px-4 py-3 text-sm font-bold uppercase tracking-wide text-slate-950 transition hover:bg-cyan-300"
+              disabled={isStarting}
+              className="w-full rounded-xl bg-cyan-400 px-4 py-3 text-sm font-bold uppercase tracking-wide text-slate-950 transition hover:bg-cyan-300 disabled:cursor-wait disabled:opacity-70"
             >
               {t('start.launch')}
             </button>
