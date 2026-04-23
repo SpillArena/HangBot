@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DIFFICULTY_CONFIG } from '../constants/gameConfig'
+import { isUsernameReserved } from '../utils/usernameModeration'
 import LoadingScreen from './LoadingScreen'
 import Leaderboard from './Leaderboard'
 
@@ -42,6 +43,11 @@ export default function StartScreen({
 
     if (trimmed.length < 2) {
       setError(t('start.usernameError'))
+      return
+    }
+
+    if (isUsernameReserved(trimmed)) {
+      setError(t('start.usernameReservedError'))
       return
     }
 
