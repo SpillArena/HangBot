@@ -57,12 +57,16 @@ export default function Leaderboard({
     ? 'rounded-xl border border-slate-200 bg-white p-4 shadow-sm'
     : 'rounded-xl border border-slate-800 bg-slate-900/70 p-4 shadow-sm'
 
+  const getDifficultyLabel = (difficulty) =>
+    t(DIFFICULTY_CONFIG[difficulty]?.labelKey ?? `difficulty.${difficulty}.label`, {
+      defaultValue: difficulty,
+    })
+
   return (
     <section className={sectionClass}>
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h2
-          className={`text-lg font-semibold tracking-wide ${isLightTheme ? 'text-slate-900' : 'text-slate-100'
-            }`}
+          className={`text-lg font-semibold tracking-wide ${isLightTheme ? 'text-slate-900' : 'text-slate-100'}`}
         >
           {t('leaderboard.title')}
         </h2>
@@ -84,9 +88,7 @@ export default function Leaderboard({
             <option value="all">{t('leaderboard.allDifficulties')}</option>
             {Object.entries(DIFFICULTY_CONFIG).map(([key, config]) => (
               <option key={key} value={key}>
-                {t(`difficulty.${key}.label`, {
-                  defaultValue: config.label,
-                })}
+                {t(config.labelKey)}
               </option>
             ))}
           </select>
@@ -121,9 +123,9 @@ export default function Leaderboard({
                         className={[
                           'inline-flex min-w-10 items-center justify-center rounded-full border px-2 py-0.5 text-xs font-semibold',
                           MEDAL_BY_RANK[index] ??
-                          (isLightTheme
-                            ? 'border-slate-300 bg-slate-100 text-slate-700'
-                            : 'border-slate-700 bg-slate-900 text-slate-300'),
+                            (isLightTheme
+                              ? 'border-slate-300 bg-slate-100 text-slate-700'
+                              : 'border-slate-700 bg-slate-900 text-slate-300'),
                         ].join(' ')}
                       >
                         #{index + 1}
@@ -131,8 +133,7 @@ export default function Leaderboard({
                     </div>
 
                     <p
-                      className={`mt-2 truncate font-semibold ${isLightTheme ? 'text-slate-900' : 'text-slate-100'
-                        }`}
+                      className={`mt-2 truncate font-semibold ${isLightTheme ? 'text-slate-900' : 'text-slate-100'}`}
                     >
                       {entry.username}
                     </p>
@@ -141,8 +142,7 @@ export default function Leaderboard({
                   {isDeveloperMode && (
                     <button
                       type="button"
-                      aria-label={`${t('leaderboard.deleteLabel')} ${entry.username
-                        }`}
+                      aria-label={`${t('leaderboard.deleteLabel')} ${entry.username}`}
                       onClick={() => onDeleteEntry?.(entry.id)}
                       className="shrink-0 rounded border border-rose-500/60 bg-rose-500/10 px-2 py-1 text-xs font-bold text-rose-200 transition hover:border-rose-400 hover:bg-rose-500/20 hover:text-rose-100"
                     >
@@ -153,11 +153,7 @@ export default function Leaderboard({
 
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p
-                      className={
-                        isLightTheme ? 'text-slate-500' : 'text-slate-400'
-                      }
-                    >
+                    <p className={isLightTheme ? 'text-slate-500' : 'text-slate-400'}>
                       {t('leaderboard.result')}
                     </p>
                     <p
@@ -167,61 +163,33 @@ export default function Leaderboard({
                           : 'font-medium text-rose-500'
                       }
                     >
-                      {entry.outcome === 'won'
-                        ? t('leaderboard.win')
-                        : t('leaderboard.loss')}
+                      {entry.outcome === 'won' ? t('leaderboard.win') : t('leaderboard.loss')}
                     </p>
                   </div>
 
                   <div>
-                    <p
-                      className={
-                        isLightTheme ? 'text-slate-500' : 'text-slate-400'
-                      }
-                    >
+                    <p className={isLightTheme ? 'text-slate-500' : 'text-slate-400'}>
                       {t('leaderboard.score')}
                     </p>
-                    <p
-                      className={`font-semibold ${isLightTheme ? 'text-cyan-700' : 'text-cyan-300'
-                        }`}
-                    >
+                    <p className={`font-semibold ${isLightTheme ? 'text-cyan-700' : 'text-cyan-300'}`}>
                       {entry.score}
                     </p>
                   </div>
 
                   <div>
-                    <p
-                      className={
-                        isLightTheme ? 'text-slate-500' : 'text-slate-400'
-                      }
-                    >
+                    <p className={isLightTheme ? 'text-slate-500' : 'text-slate-400'}>
                       {t('leaderboard.difficulty')}
                     </p>
-                    <p
-                      className={`truncate ${isLightTheme ? 'text-slate-800' : 'text-slate-200'
-                        }`}
-                    >
-                      {t(`difficulty.${entry.difficulty}.label`, {
-                        defaultValue:
-                          DIFFICULTY_CONFIG[entry.difficulty]?.label ||
-                          entry.difficulty,
-                      })}
+                    <p className={`truncate ${isLightTheme ? 'text-slate-800' : 'text-slate-200'}`}>
+                      {getDifficultyLabel(entry.difficulty)}
                     </p>
                   </div>
 
                   <div>
-                    <p
-                      className={
-                        isLightTheme ? 'text-slate-500' : 'text-slate-400'
-                      }
-                    >
+                    <p className={isLightTheme ? 'text-slate-500' : 'text-slate-400'}>
                       {t('leaderboard.mistakes')}
                     </p>
-                    <p
-                      className={
-                        isLightTheme ? 'text-slate-800' : 'text-slate-200'
-                      }
-                    >
+                    <p className={isLightTheme ? 'text-slate-800' : 'text-slate-200'}>
                       {entry.wrongGuesses}/{entry.maxWrongGuesses}
                     </p>
                   </div>
@@ -229,8 +197,7 @@ export default function Leaderboard({
 
                 <div className="mt-3">
                   <p
-                    className={`text-xs break-words ${isLightTheme ? 'text-slate-500' : 'text-slate-400'
-                      }`}
+                    className={`text-xs break-words ${isLightTheme ? 'text-slate-500' : 'text-slate-400'}`}
                   >
                     {formatTimestamp(entry.timestamp, language)}
                   </p>
@@ -239,12 +206,9 @@ export default function Leaderboard({
             ))}
           </div>
 
-          <div className="hidden sm:block overflow-x-auto">
+          <div className="hidden overflow-x-auto sm:block">
             <table
-              className={`min-w-full table-auto divide-y text-left text-sm ${isLightTheme
-                  ? 'divide-slate-300'
-                  : 'divide-slate-800'
-                }`}
+              className={`min-w-full table-auto divide-y text-left text-sm ${isLightTheme ? 'divide-slate-300' : 'divide-slate-800'}`}
             >
               <thead
                 className={
@@ -275,23 +239,16 @@ export default function Leaderboard({
                 {filteredEntries.map((entry, index) => (
                   <tr
                     key={entry.id}
-                    className={
-                      isLightTheme
-                        ? 'transition hover:bg-slate-100/80'
-                        : 'transition hover:bg-slate-900/60'
-                    }
+                    className={isLightTheme ? 'transition hover:bg-slate-100/80' : 'transition hover:bg-slate-900/60'}
                   >
-                    <td
-                      className={`px-2 py-2 font-semibold ${isLightTheme ? 'text-slate-700' : 'text-slate-300'
-                        }`}
-                    >
+                    <td className={`px-2 py-2 font-semibold ${isLightTheme ? 'text-slate-700' : 'text-slate-300'}`}>
                       <span
                         className={[
                           'inline-flex min-w-10 items-center justify-center rounded-full border px-2 py-0.5',
                           MEDAL_BY_RANK[index] ??
-                          (isLightTheme
-                            ? 'border-slate-300 bg-slate-100 text-slate-700'
-                            : 'border-slate-700 bg-slate-900 text-slate-300'),
+                            (isLightTheme
+                              ? 'border-slate-300 bg-slate-100 text-slate-700'
+                              : 'border-slate-700 bg-slate-900 text-slate-300'),
                         ].join(' ')}
                       >
                         #{index + 1}
@@ -303,31 +260,14 @@ export default function Leaderboard({
                     </td>
 
                     <td className="px-2 py-2">
-                      <span
-                        className={
-                          entry.outcome === 'won'
-                            ? 'text-emerald-500'
-                            : 'text-rose-500'
-                        }
-                      >
-                        {entry.outcome === 'won'
-                          ? t('leaderboard.win')
-                          : t('leaderboard.loss')}
+                      <span className={entry.outcome === 'won' ? 'text-emerald-500' : 'text-rose-500'}>
+                        {entry.outcome === 'won' ? t('leaderboard.win') : t('leaderboard.loss')}
                       </span>
                     </td>
 
-                    <td className="px-2 py-2">
-                      {t(`difficulty.${entry.difficulty}.label`, {
-                        defaultValue:
-                          DIFFICULTY_CONFIG[entry.difficulty]?.label ||
-                          entry.difficulty,
-                      })}
-                    </td>
+                    <td className="px-2 py-2">{getDifficultyLabel(entry.difficulty)}</td>
 
-                    <td
-                      className={`px-2 py-2 font-semibold ${isLightTheme ? 'text-cyan-700' : 'text-cyan-300'
-                        }`}
-                    >
+                    <td className={`px-2 py-2 font-semibold ${isLightTheme ? 'text-cyan-700' : 'text-cyan-300'}`}>
                       {entry.score}
                     </td>
 
@@ -335,10 +275,7 @@ export default function Leaderboard({
                       {entry.wrongGuesses}/{entry.maxWrongGuesses}
                     </td>
 
-                    <td
-                      className={`max-w-[160px] break-words px-2 py-2 text-xs ${isLightTheme ? 'text-slate-500' : 'text-slate-400'
-                        }`}
-                    >
+                    <td className={`max-w-[160px] break-words px-2 py-2 text-xs ${isLightTheme ? 'text-slate-500' : 'text-slate-400'}`}>
                       {formatTimestamp(entry.timestamp, language)}
                     </td>
 
@@ -346,8 +283,7 @@ export default function Leaderboard({
                       <td className="px-2 py-2">
                         <button
                           type="button"
-                          aria-label={`${t('leaderboard.deleteLabel')} ${entry.username
-                            }`}
+                          aria-label={`${t('leaderboard.deleteLabel')} ${entry.username}`}
                           onClick={() => onDeleteEntry?.(entry.id)}
                           className="rounded border border-rose-500/60 bg-rose-500/10 px-2 py-0.5 text-xs font-bold text-rose-200 transition hover:border-rose-400 hover:bg-rose-500/20 hover:text-rose-100"
                         >

@@ -1,33 +1,33 @@
 export const DIFFICULTY_CONFIG = {
   easy: {
-    label: 'Easy',
+    labelKey: 'difficulty.easy.label',
+    descriptionKey: 'difficulty.easy.description',
     maxWrongGuesses: 8,
     multiplier: 1,
-    description: 'More attempts and direct hints.',
   },
   medium: {
-    label: 'Medium',
+    labelKey: 'difficulty.medium.label',
+    descriptionKey: 'difficulty.medium.description',
     maxWrongGuesses: 7,
     multiplier: 1.35,
-    description: 'Balanced challenge and score gain.',
   },
   hard: {
-    label: 'Hard',
+    labelKey: 'difficulty.hard.label',
+    descriptionKey: 'difficulty.hard.description',
     maxWrongGuesses: 6,
     multiplier: 1.7,
-    description: 'Fewer attempts and tougher words.',
   },
   insane: {
-    label: 'Insane',
+    labelKey: 'difficulty.insane.label',
+    descriptionKey: 'difficulty.insane.description',
     maxWrongGuesses: 5,
     multiplier: 2.1,
-    description: 'Longer, tougher dictionary words.',
   },
   impossible: {
-    label: 'Impossible',
+    labelKey: 'difficulty.impossible.label',
+    descriptionKey: 'difficulty.impossible.description',
     maxWrongGuesses: 3,
     multiplier: 2.8,
-    description: 'The longest, toughest dictionary words with only 3 attempts.',
   },
 }
 
