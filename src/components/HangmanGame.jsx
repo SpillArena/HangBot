@@ -5,60 +5,9 @@ import {
   DIFFICULTY_CONFIG,
   NORWEGIAN_ALPHABET_EXT,
 } from '../constants/gameConfig'
+import { HANGMAN_STAGES } from '../constants/hangmanStages'
 import { generateBotWord } from '../utils/botWordFactory'
 import LoadingScreen from './LoadingScreen'
-
-const HANGMAN_STAGES = [
-  ` +---+
- |   |
-     |
-     |
-     |
-     |
-========`,
-  ` +---+
- |   |
- O   |
-     |
-     |
-     |
-========`,
-  ` +---+
- |   |
- O   |
- |   |
-     |
-     |
-========`,
-  ` +---+
- |   |
- O   |
-/|   |
-     |
-     |
-========`,
-  ` +---+
- |   |
- O   |
-/|\\  |
-     |
-     |
-========`,
-  ` +---+
- |   |
- O   |
-/|\\  |
-/    |
-     |
-========`,
-  ` +---+
- |   |
- O   |
-/|\\  |
-/ \\  |
-     |
-========`,
-]
 
 const createRoundId = () =>
   typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
