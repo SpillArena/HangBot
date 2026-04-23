@@ -24,9 +24,7 @@ export default function StartScreen({
     ? 'w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none'
     : 'w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none'
   const mutedTextClassName = isLightTheme ? 'text-slate-700' : 'text-slate-300'
-  const subtleTextClassName = isLightTheme
-    ? 'text-slate-600'
-    : 'text-slate-400'
+  const subtleTextClassName = isLightTheme ? 'text-slate-600' : 'text-slate-400'
   const toggleButtonClassName = isLightTheme
     ? 'inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-800 transition hover:border-cyan-500 hover:text-cyan-700'
     : 'inline-flex items-center gap-1 rounded-full border border-slate-600 bg-slate-800/80 px-3 py-1 text-xs font-semibold text-slate-100 transition hover:border-cyan-400 hover:text-cyan-100'
@@ -68,7 +66,7 @@ export default function StartScreen({
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-8 md:px-8">
+    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-2 md:px-8">
       <header
         className={
           isLightTheme
@@ -91,6 +89,7 @@ export default function StartScreen({
             <span>{isLightTheme ? t('start.light') : t('start.dark')}</span>
           </button>
         </div>
+
         <p className={`mt-3 max-w-3xl text-sm md:text-base ${mutedTextClassName}`}>
           {t('start.appDescription')}
         </p>
@@ -103,12 +102,10 @@ export default function StartScreen({
           >
             {t('start.startRound')}
           </h2>
+
           <form className="mt-4 space-y-4" onSubmit={handleStart}>
             <div className="space-y-2">
-              <label
-                htmlFor="username"
-                className={`text-sm ${mutedTextClassName}`}
-              >
+              <label htmlFor="username" className={`text-sm ${mutedTextClassName}`}>
                 {t('start.username')}
               </label>
               <input
@@ -123,10 +120,7 @@ export default function StartScreen({
             </div>
 
             <div className="space-y-2">
-              <label
-                htmlFor="difficulty"
-                className={`text-sm ${mutedTextClassName}`}
-              >
+              <label htmlFor="difficulty" className={`text-sm ${mutedTextClassName}`}>
                 {t('start.difficulty')}
               </label>
               <select
@@ -144,10 +138,7 @@ export default function StartScreen({
             </div>
 
             <div className="space-y-2">
-              <label
-                htmlFor="language"
-                className={`text-sm ${mutedTextClassName}`}
-              >
+              <label htmlFor="language" className={`text-sm ${mutedTextClassName}`}>
                 {t('start.languageLabel')}
               </label>
               <select
@@ -203,11 +194,8 @@ export default function StartScreen({
               }
             >
               {t('start.lastRound')}{' '}
-              {lastResult.outcome === 'won'
-                ? t('start.win')
-                : t('start.loss')}{' '}
-              • {lastResult.score} pts • {lastResult.wordLength}{' '}
-              {t('start.letters')}
+              {lastResult.outcome === 'won' ? t('start.win') : t('start.loss')} •{' '}
+              {lastResult.score} pts • {lastResult.wordLength} {t('start.letters')}
             </div>
           )}
         </section>

@@ -2,13 +2,14 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import HangmanGame from './components/HangmanGame'
 import StartScreen from './components/StartScreen'
+import TopNavAction from './components/TopNavAction'
 import {
+  addLeaderboardEntryWithFallback,
   loadLeaderboard,
   loadLeaderboardWithFallback,
   loadRememberedUsername,
-  addLeaderboardEntryWithFallback,
-  removeLeaderboardEntryWithFallback,
   rememberUsername,
+  removeLeaderboardEntryWithFallback,
 } from './utils/leaderboardStorage'
 
 const ARENA_PRIMARY_URL = 'https://spillarena.no'
@@ -25,7 +26,9 @@ const getInitialTheme = () => {
     return storedTheme
   }
 
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light'
 }
 
 export default function App() {
@@ -86,6 +89,7 @@ export default function App() {
     }
 
     hydrateLeaderboard()
+
     return () => {
       cancelled = true
     }
@@ -122,35 +126,24 @@ export default function App() {
   }, [])
 
   const handleToggleTheme = useCallback(() => {
-    setTheme((previousTheme) => (previousTheme === 'dark' ? 'light' : 'dark'))
+    setTheme((previousTheme) =>
+      previousTheme === 'dark' ? 'light' : 'dark',
+    )
   }, [])
 
-  const lobbyArenaButtonClassName =
-    theme === "light"
-      ? "z-50 inline-flex items-center rounded-full border border-rose-500/60 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-rose-900 shadow-lg shadow-black/10 backdrop-blur transition hover:border-rose-400 hover:bg-white/85 hover:text-rose-950"
-      : "z-50 inline-flex items-center rounded-full border border-rose-500/60 bg-slate-950/80 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-rose-200 shadow-lg shadow-black/25 transition hover:border-rose-400 hover:bg-slate-900/90 hover:text-rose-100";
-
   return (
-    <div className="min-h-screen text-[var(--app-fg)] flex flex-col items-start justify-start gap-0 py-10 px-4">
-      <div className="mx-auto w-full max-w-7xl px-8">
-        {screen === 'game' ? (
-          <button
-            onClick={() => setScreen('start')}
-            className={lobbyArenaButtonClassName}
-          >
-            {t('game.giveUp')}
-          </button>
-        ) : (
-          <a
-            href={arenaUrl}
-            className={lobbyArenaButtonClassName}
-          >
-            {t('start.backToArena')}
-          </a>
-        )}
-
-
+    <div className="min-h-screen px-4 py-6 text-[var(--app-fg)] sm:py-8">
+      <div className="mx-auto mb-4 flex w-full max-w-7xl justify-start px-4 md:px-8">
+        <TopNavAction
+          isGameActive={screen === 'game'}
+          hubUrl={arenaUrl}
+          onGiveUp={() => setScreen('start')}
+          backToHubLabel={t('start.backToArena')}
+          giveUpLabel={t('game.giveUp')}
+          theme={theme}
+        />
       </div>
+
       {screen === 'start' ? (
         <StartScreen
           defaultUsername={username}
@@ -174,4 +167,3 @@ export default function App() {
     </div>
   )
 }
-

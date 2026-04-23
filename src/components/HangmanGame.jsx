@@ -9,6 +9,12 @@ import { HANGMAN_STAGES } from '../constants/hangmanStages'
 import { generateBotWord } from '../utils/botWordFactory'
 import LoadingScreen from './LoadingScreen'
 
+const getNavButtonClassName = (isLightTheme) =>
+  isLightTheme
+    ? 'inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-cyan-500 hover:text-cyan-700'
+    : 'inline-flex items-center justify-center rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 shadow-sm transition hover:border-cyan-400 hover:text-cyan-200'
+
+
 const createRoundId = () =>
   typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
     ? crypto.randomUUID()
@@ -79,6 +85,7 @@ export default function HangmanGame({
   const { i18n, t } = useTranslation()
   const language = i18n.language.startsWith('no') ? 'no' : 'en'
   const isLightTheme = theme === 'light'
+  const navButtonClassName = getNavButtonClassName(isLightTheme)
 
   const gameAlphabet = useMemo(
     () =>
@@ -330,7 +337,28 @@ export default function HangmanGame({
 
   if (!round) {
     return (
-      <main className={shellClassName}>
+      <main
+        className={[
+          shellClassName,
+          'transition-all duration-500 ease-out',
+          isRevealing && !isLoadingRound
+            ? 'translate-y-0 opacity-100'
+            : 'translate-y-3 opacity-0',
+        ].join(' ')}
+      >
+        <div className="flex items-center justify-start">
+          <button
+            type="button"
+            onClick={onBackToLobby}
+            className={navButtonClassName}
+          >
+            {t('game.backToLobby')}
+          </button>
+        </div>
+
+        <header
+          className={`${panelClassName} flex flex-wrap items-center justify-between gap-3 p-4`}
+        >
         <section className={`${panelClassName} p-6 text-center`}>
           <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">
             HangBot
@@ -357,6 +385,7 @@ export default function HangmanGame({
             </button>
           </div>
         </section>
+        </header>
       </main>
     )
   }

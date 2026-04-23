@@ -10,10 +10,16 @@ const formatTimestamp = (isoDate, language) => {
   return date.toLocaleString(language === 'no' ? 'nb-NO' : 'en-US')
 }
 
-const MEDAL_BY_RANK = {
+const MEDAL_BY_RANK_DARK = {
   0: 'border-amber-300/60 bg-amber-300/20 text-amber-100',
   1: 'border-slate-300/60 bg-slate-300/20 text-slate-100',
   2: 'border-orange-400/60 bg-orange-400/20 text-orange-100',
+}
+
+const MEDAL_BY_RANK_LIGHT = {
+  0: 'border-amber-400/70 bg-amber-100 text-amber-900',
+  1: 'border-slate-400/70 bg-slate-100 text-slate-800',
+  2: 'border-orange-400/70 bg-orange-100 text-orange-900',
 }
 
 export default function Leaderboard({
@@ -56,6 +62,7 @@ export default function Leaderboard({
   const mobileCardClass = isLightTheme
     ? 'rounded-xl border border-slate-200 bg-white p-4 shadow-sm'
     : 'rounded-xl border border-slate-800 bg-slate-900/70 p-4 shadow-sm'
+  const medalByRank = isLightTheme ? MEDAL_BY_RANK_LIGHT : MEDAL_BY_RANK_DARK
 
   const getDifficultyLabel = (difficulty) =>
     t(DIFFICULTY_CONFIG[difficulty]?.labelKey ?? `difficulty.${difficulty}.label`, {
@@ -122,7 +129,7 @@ export default function Leaderboard({
                       <span
                         className={[
                           'inline-flex min-w-10 items-center justify-center rounded-full border px-2 py-0.5 text-xs font-semibold',
-                          MEDAL_BY_RANK[index] ??
+                          medalByRank[index] ??
                             (isLightTheme
                               ? 'border-slate-300 bg-slate-100 text-slate-700'
                               : 'border-slate-700 bg-slate-900 text-slate-300'),
@@ -245,7 +252,7 @@ export default function Leaderboard({
                       <span
                         className={[
                           'inline-flex min-w-10 items-center justify-center rounded-full border px-2 py-0.5',
-                          MEDAL_BY_RANK[index] ??
+                          medalByRank[index] ??
                             (isLightTheme
                               ? 'border-slate-300 bg-slate-100 text-slate-700'
                               : 'border-slate-700 bg-slate-900 text-slate-300'),
