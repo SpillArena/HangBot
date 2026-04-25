@@ -470,4 +470,6 @@ export const RESERVED_USERNAME_TERMS = [
   'åndssvak',
   'invalid',
   'mongol',
+  'ni6',
+  'Cottonp'
 ]
