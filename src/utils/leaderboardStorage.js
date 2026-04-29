@@ -2,7 +2,7 @@ import { MAX_LEADERBOARD_ENTRIES } from '../constants/gameConfig'
 
 const LEADERBOARD_STORAGE_KEY = 'hangbot.leaderboard.v1'
 const USERNAME_STORAGE_KEY = 'hangbot.username.v1'
-const LEADERBOARD_API_PATH = '/api/leaderboard'
+const LEADERBOARD_API_PATH = '/hangbot/api/leaderboard'
 
 const isValidEntry = (entry) => {
   if (!entry || typeof entry !== 'object') {
